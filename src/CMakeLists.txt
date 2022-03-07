@@ -1,0 +1,20 @@
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_LIST_DIR})
+
+SET(SRC)
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/veda/pytorch/CMakeLists.txt)
+ADD_LIBRARY(veda-pytorch SHARED ${SRC})
+ILLYRIAN_TARGET_OPTIONS(veda-pytorch
+	PYTHON
+	DESTINATION		${VEDAPytorch_INSTALL_PATH}/lib64
+	PYTHON_RPATH	"$ORIGIN/../../../torch/lib" "$ORIGIN/../../../tungl/lib64" "$ORIGIN/../../lib64" "$ORIGIN/../../tensors/lib64"
+)
+TARGET_LINK_LIBRARIES(veda-pytorch PRIVATE
+	${VEDA_LIBRARY}
+	${Tungl_LIBRARY}
+	${VEDATensors_LIBRARY}
+	${PYTORCH_LIBRARIES}
+)
+
+ADD_PYTHON_WHEEL(dist ${CMAKE_CURRENT_LIST_DIR}/veda-pytorch.json)
+
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/python/CMakeLists.txt)

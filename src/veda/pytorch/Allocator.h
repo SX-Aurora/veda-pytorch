@@ -1,0 +1,58 @@
+#include "__ns.h"
+//------------------------------------------------------------------------------
+struct Scalar {
+	uint64_t x, y;
+};
+
+//------------------------------------------------------------------------------
+Scalar					scalar					(const c10::ScalarType& type, const c10::Scalar& value);
+at::Scalar				toPyScalar				(const c10::ScalarType& type, const Scalar value);
+VEDATensors_dtype		dtype					(const at::Tensor& self);
+VEDATensors_dtype		dtype					(const c10::TensorImpl* self);
+VEDATensors_handle		handle					(void);
+VEDATensors_handle		handle					(const at::Tensor& self);
+VEDATensors_reduce_op	reduction				(int64_t reduction);
+at::Allocator*			allocator				(void);
+at::Tensor				empty					(at::IntArrayRef size, c10::optional<c10::ScalarType> dtype, c10::optional<c10::Layout> layout, c10::optional<c10::Device> device, c10::optional<bool> pin_memory, const c10::optional<c10::MemoryFormat> memory_format);
+at::Tensor				sameDevice				(const at::Tensor& self, at::Tensor other);
+at::Tensor				sameType				(const at::Tensor& self, at::Tensor other);
+c10::TensorImpl*		resizePyTensor			(c10::TensorImpl* self, at::IntArrayRef size, c10::optional<at::IntArrayRef> stride);
+size_t					numel					(const at::Tensor& self);
+
+//------------------------------------------------------------------------------
+inline at::Tensor empty_as(at::IntArrayRef sizes, const at::Tensor& self, const c10::ScalarType& dtype) {
+	return empty(sizes, dtype, self.layout(), self.device(), false, at::MemoryFormat::Contiguous);
+}
+
+//------------------------------------------------------------------------------
+inline	VEDAdeviceptr		ptr		(c10::TensorImpl* self)									{	return (VEDAdeviceptr)self->data();					}
+inline	VEDAdeviceptr		ptr		(const at::Tensor& self)								{	return ptr(self.unsafeGetTensorImpl());				}
+inline	at::Tensor			empty_as(at::IntArrayRef sizes, const at::Tensor& self)			{	return empty_as(sizes, self, self.scalar_type());	}
+inline	at::Tensor			empty_as(const at::Tensor& self)								{	return empty_as(self.sizes(), self);				}
+inline	at::Tensor			empty_as(const at::Tensor& self, const c10::ScalarType& dtype)	{	return empty_as(self.sizes(), self, dtype);			}
+inline	c10::TensorImpl*	deref	(void* ref)												{	return (c10::TensorImpl*)ref;						}
+
+//------------------------------------------------------------------------------
+inline at::Tensor empty_strided(at::IntArrayRef size, at::IntArrayRef stride, c10::optional<at::ScalarType> dtype, c10::optional<at::Layout> layout, c10::optional<at::Device> device, c10::optional<bool> pin_memory) {
+	return empty(size, dtype, layout, device, pin_memory, c10::nullopt);
+}
+
+//------------------------------------------------------------------------------
+inline VEDATensors_tensor py2veda(const at::Tensor& self) {
+	return {self.sizes().size(), self.sizes(), dtype(self), ptr(self)};
+}
+
+//------------------------------------------------------------------------------
+inline at::Tensor toScalarPyTensor(const Scalar& value, const at::Tensor& self) {
+	return at::scalar_to_tensor(toPyScalar(self.scalar_type(), value), self.device());
+}
+
+//------------------------------------------------------------------------------
+inline at::Tensor wrapped_scalar_tensor(const at::Tensor& self, at::Scalar scalar) {
+	auto tensor = c10::scalar_to_tensor(scalar, self.device()).toType(self.scalar_type());
+	tensor.unsafeGetTensorImpl()->set_wrapped_number(true);
+	return tensor;
+}
+
+//------------------------------------------------------------------------------
+#include "__ns.h"
