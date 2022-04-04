@@ -4,21 +4,30 @@
 
 //------------------------------------------------------------------------------
 class VEGuard final {
-	inline void init(const c10::Device d) {
-		L_WARN("DEVICE: %i", d.index());
-		L_WARN("TODO: Handle PyTorch default device shit!");
+	const c10::Device	m_device;
+
+	inline void init(void) const {
+		ASSERT(m_device.type() == DEVICE_TYPE);
+		auto idx = m_device.index();
 		VEDAcontext ctx;
-		CVEDA(vedaDevicePrimaryCtxRetain(&ctx, d.index()));
+		if(idx >= 0) {
+			CVEDA(vedaDevicePrimaryCtxRetain(&ctx, m_device.index()));
+		} else if(idx == -1) {
+			if(vedaCtxGetCurrent(&ctx) != VEDA_SUCCESS)
+				CVEDA(vedaDevicePrimaryCtxRetain(&ctx, 0));
+		} else {
+			THROW("Illegal device index: %i", idx);
+		}
 		CVEDA(vedaCtxPushCurrent(ctx));
 	}
 
 public:
-	inline VEGuard(const c10::Device device)			{	init(device);					}
-	inline VEGuard(const at::Tensor& self)				{	init(self.device());			}
-	inline VEGuard(const at::TensorList& list)			{	init(list.front().device());	}
-	inline VEGuard(const at::TensorOptions& options)	{	init(options.device());			}
-	inline VEGuard(const c10::DeviceIndex device)		{	init({DEVICE_TYPE, device});	}
-	inline VEGuard(const c10::TensorImpl* self)			{	init(self->device());			}
+	inline VEGuard(const c10::Device device)			: m_device(device)					{	init();	}
+	inline VEGuard(const at::Tensor& self)				: m_device(self.device())			{	init();	}
+	inline VEGuard(const at::TensorList& list)			: m_device(list.front().device())	{	init();	}
+	inline VEGuard(const at::TensorOptions& options)	: m_device(options.device())		{	init();	}
+	inline VEGuard(const c10::DeviceIndex device)		: m_device({DEVICE_TYPE, device})	{	init();	}
+	inline VEGuard(const c10::TensorImpl* self)			: m_device(self->device())			{	init();	}
 	
 	inline ~VEGuard(void) {
 		VEDAcontext ctx;

@@ -98,8 +98,8 @@ class DeviceOf(Device):
 def synchronize(device=None):
 	device	= get_device_idx(device)
 
-	flags	= c_types.c_int()
-	active	= c_types.c_int()
+	flags	= ctypes.c_int()
+	active	= ctypes.c_int()
 
 	def sync(device):
 		libveda.vedaDevicePrimaryCtxGetState(device, ctypes.byref(flags), ctypes.byref(active))

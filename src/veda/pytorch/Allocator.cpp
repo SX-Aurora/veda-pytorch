@@ -44,36 +44,36 @@ VEDATensors_reduce_op reduction(int64_t reduction) { // TODO: move to other file
 }
 
 //------------------------------------------------------------------------------
-Scalar scalar(const c10::ScalarType& type, const c10::Scalar& value) {
-	Scalar scalar = {};
+VEDATensors_scalar scalar(const c10::ScalarType& type, const c10::Scalar& value) {
+	VEDATensors_scalar scalar = {};
 	
 	switch(type) {
-		case c10::ScalarType::Byte:				*((uint8_t*)&scalar)				= value.to<uint8_t>	();				return scalar;
-		case c10::ScalarType::Char:				*((int8_t*)&scalar)					= value.to<int8_t>	();				return scalar;
-		case c10::ScalarType::Short:			*((int16_t*)&scalar)				= value.to<int16_t>	();				return scalar;
-		case c10::ScalarType::Int:				*((int32_t*)&scalar)				= value.to<int32_t>	();				return scalar;
-		case c10::ScalarType::Long:				*((int64_t*)&scalar)				= value.to<int64_t>	();				return scalar;
-		case c10::ScalarType::Float:			*((float*)&scalar)					= value.to<float>	();				return scalar;
-		case c10::ScalarType::Double:			*((double*)&scalar)					= value.to<double>	();				return scalar;
-		case c10::ScalarType::Bool:				*((bool*)&scalar)					= value.to<bool>	();				return scalar;
-		case c10::ScalarType::ComplexFloat:		*((c10::complex<float>*)&scalar)	= value.to<c10::complex<float>>();	return scalar;
-		case c10::ScalarType::ComplexDouble:	*((c10::complex<double>*)&scalar)	= value.to<c10::complex<double>>();	return scalar;
+		case c10::ScalarType::Byte:				scalar.U8		= value.to<uint8_t>	();	return scalar;
+		case c10::ScalarType::Char:				scalar.S8		= value.to<int8_t>	();	return scalar;
+		case c10::ScalarType::Short:			scalar.S16		= value.to<int16_t>	();	return scalar;
+		case c10::ScalarType::Int:				scalar.S32		= value.to<int32_t>	();	return scalar;
+		case c10::ScalarType::Long:				scalar.S64		= value.to<int64_t>	();	return scalar;
+		case c10::ScalarType::Float:			scalar.F32		= value.to<float>	();	return scalar;
+		case c10::ScalarType::Double:			scalar.F64		= value.to<double>	();	return scalar;
+		case c10::ScalarType::Bool:				scalar.S8		= value.to<bool>	();	return scalar;
+		case c10::ScalarType::ComplexFloat:		{	auto v = value.to<c10::complex<float>>();	memcpy(&scalar, &v, sizeof(float)  * 2);	return scalar;	}
+		case c10::ScalarType::ComplexDouble:	{	auto v = value.to<c10::complex<double>>();	memcpy(&scalar, &v, sizeof(double) * 2);	return scalar;	}
 	}
 
 	THROW("Unknown scalar type");
 }
 
 //------------------------------------------------------------------------------
-at::Scalar toPyScalar(const c10::ScalarType& type, const Scalar value) {
+at::Scalar toPyScalar(const c10::ScalarType& type, const VEDATensors_scalar value) {
 	switch(type) {
-		case c10::ScalarType::Byte:				return at::Scalar(*(const uint8_t*)				&value);
-		case c10::ScalarType::Char:				return at::Scalar(*(const int8_t*)				&value);
-		case c10::ScalarType::Short:			return at::Scalar(*(const int16_t*)				&value);
-		case c10::ScalarType::Int:				return at::Scalar(*(const int32_t*)				&value);
-		case c10::ScalarType::Long:				return at::Scalar(*(const int64_t*)				&value);
-		case c10::ScalarType::Float:			return at::Scalar(*(const float*)				&value);
-		case c10::ScalarType::Double:			return at::Scalar(*(const double*)				&value);
-		case c10::ScalarType::Bool:				return at::Scalar(*(const bool*)				&value);
+		case c10::ScalarType::Byte:				return at::Scalar(value.U8);
+		case c10::ScalarType::Char:				return at::Scalar(value.S8);
+		case c10::ScalarType::Short:			return at::Scalar(value.S16);
+		case c10::ScalarType::Int:				return at::Scalar(value.S32);
+		case c10::ScalarType::Long:				return at::Scalar(value.S64);
+		case c10::ScalarType::Float:			return at::Scalar(value.F32);
+		case c10::ScalarType::Double:			return at::Scalar(value.F64);
+		case c10::ScalarType::Bool:				return at::Scalar(value.S8);
 		case c10::ScalarType::ComplexFloat:		return at::Scalar(*(const c10::complex<float>*)	&value);
 		case c10::ScalarType::ComplexDouble:	return at::Scalar(*(const c10::complex<double>*)&value);
 	}
@@ -144,7 +144,7 @@ VEDATensors_dtype dtype(const at::Tensor& self) {
 		case c10::ScalarType::Long:				return VEDA_TENSORS_DTYPE_S64;
 		case c10::ScalarType::Float:			return VEDA_TENSORS_DTYPE_F32;
 		case c10::ScalarType::Double:			return VEDA_TENSORS_DTYPE_F64;
-		case c10::ScalarType::Bool:				return VEDA_TENSORS_DTYPE_BOOL;
+		case c10::ScalarType::Bool:				return VEDA_TENSORS_DTYPE_S8;
 		case c10::ScalarType::ComplexFloat:		return VEDA_TENSORS_DTYPE_F32_F32;
 		case c10::ScalarType::ComplexDouble:	return VEDA_TENSORS_DTYPE_F64_F64;
 	}
@@ -154,7 +154,7 @@ VEDATensors_dtype dtype(const at::Tensor& self) {
 
 //------------------------------------------------------------------------------
 VEDATensors_dtype dtype(const c10::TensorImpl* self) {
-	if(self->dtype() == caffe2::TypeMeta::Make<bool>())					return VEDA_TENSORS_DTYPE_BOOL;
+	if(self->dtype() == caffe2::TypeMeta::Make<bool>())					return VEDA_TENSORS_DTYPE_S8;
 	if(self->dtype() == caffe2::TypeMeta::Make<int8_t>())				return VEDA_TENSORS_DTYPE_S8;
 	if(self->dtype() == caffe2::TypeMeta::Make<int16_t>())				return VEDA_TENSORS_DTYPE_S16;
 	if(self->dtype() == caffe2::TypeMeta::Make<int32_t>())				return VEDA_TENSORS_DTYPE_S32;
@@ -256,6 +256,7 @@ VEDATensors_handle handle(void) {
 
 //------------------------------------------------------------------------------
 VEDATensors_handle handle(const at::Tensor& self) {
+	ASSERT(self.device().index() >= 0);
 	VEDATensors_handle handle;
 	CVEDA(veda_tensors_get_handle_by_id(&handle, self.device().index()));
 	return handle;
@@ -273,6 +274,33 @@ at::Tensor sameType(const at::Tensor& self, at::Tensor other) {
 	if(self.scalar_type() != other.scalar_type())
 		other = other.toType(self.scalar_type());
 	return other;
+}
+
+//------------------------------------------------------------------------------
+VEDATensors_tensor py2veda(const at::Tensor& self) {
+	auto sizes = self.sizes();
+	if([&] {
+		bool allZero = false;
+		auto strides = self.strides();
+		
+		for(size_t i = 0; i < sizes.size(); i++) {
+			if(sizes[i] > 1) {
+				if(strides[i] == 0) {
+					allZero = true;
+				} else if(allZero) {
+					std::ostringstream ss;
+					ss << "VEDATensors does not support mixed-zero strides but found: " << strides;
+					THROW(ss.str().c_str());
+				}
+			}
+		}
+
+		return allZero;
+	}()) {
+		return {0, (size_t*)0, dtype(self), ptr(self)};
+	}
+
+	return {sizes.size(), sizes, dtype(self), ptr(self)};
 }
 
 //------------------------------------------------------------------------------

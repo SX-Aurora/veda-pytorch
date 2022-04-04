@@ -7,8 +7,7 @@
 //------------------------------------------------------------------------------
 static at::Tensor& masked_fill_scalar(at::Tensor& self, const at::Tensor& mask, const at::Scalar& source) {
 	auto self_ = py2veda(self), mask_ = py2veda(mask);
-	auto source_ = scalar(self.scalar_type(), source);
-	CVEDA(veda_tensors_masked_fill(handle(self), &self_, &source_, &mask_));
+	CVEDA(veda_tensors_masked_fill(handle(self), &self_, scalar(self.scalar_type(), source), &mask_));
 	return self;
 }
 

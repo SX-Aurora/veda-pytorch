@@ -6,7 +6,6 @@
 //------------------------------------------------------------------------------
 static at::Tensor& unary_t_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
 	auto iter = at::TensorIterator::unary_op(out, self);
-	GUARD(iter.tensor(0));
 	auto& A = iter.tensor(0);
 	auto& B = iter.tensor(1);
 	auto A_ = py2veda(A), B_ = py2veda(B);
@@ -41,7 +40,6 @@ static at::Tensor& unary_c_kernel(at::Tensor& out, const at::Tensor& self, const
       		.cast_common_dtype_to_outputs(false)
       		.enforce_safe_casting_to_output(false)
       		.check_all_same_dtype(false));
-		GUARD(iter.tensor(0));
 		auto& A = iter.tensor(0);
 		auto& B = iter.tensor(1);
 		auto A_ = py2veda(A), B_ = py2veda(B);
@@ -62,7 +60,6 @@ static at::Tensor unary_c(const at::Tensor& self) {
 // TT
 //------------------------------------------------------------------------------
 static at::Tensor& unary_tt_kernel(at::Tensor& out, const at::Tensor& self, const at::Tensor& other, const VEDATensors_unary_op op) {
-	GUARD(out);
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, other)));
 	auto A = iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
 	auto A_ = py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
@@ -95,11 +92,9 @@ at::Tensor& unary_tt_(at::Tensor& self, const at::Tensor& other) {
 static at::Tensor& unary_tts_kernel(at::Tensor& out, const at::Tensor& self, const at::Tensor& other, const at::Scalar& alpha, const VEDATensors_unary_op op) {
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, other)));
 	at::native::alpha_check(iter.dtype(), alpha);
-	GUARD(iter.tensor(0));
-	auto A = iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
-	auto scalar_ = scalar(out.scalar_type(), alpha);
-	auto A_ = py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
-	CVEDA(veda_tensors_unary_tts(handle(A), &A_, &B_, &C_, &scalar_, op));
+	auto A	= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
+	auto A_	= py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
+	CVEDA(veda_tensors_unary_tts(handle(A), &A_, &B_, &C_, scalar(out.scalar_type(), alpha), op));
 	return out;
 }
 
@@ -132,11 +127,9 @@ static at::Tensor& unary_ttts_kernel(at::Tensor& result, const at::Tensor& self,
 		.add_input(tensor1)
 		.add_input(tensor2)
 		.build();
-	GUARD(iter.tensor(0));
-	auto A			= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2), D = iter.tensor(3);
-	auto scalar_	= scalar(result.scalar_type(), value);
-	auto A_			= py2veda(A), B_ = py2veda(B), C_ = py2veda(C), D_ = py2veda(D);
-	CVEDA(veda_tensors_unary_ttts(handle(A), &A_, &B_, &C_, &D_, &scalar_, op));
+	auto A	= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2), D = iter.tensor(3);
+	auto A_	= py2veda(A), B_ = py2veda(B), C_ = py2veda(C), D_ = py2veda(D);
+	CVEDA(veda_tensors_unary_ttts(handle(A), &A_, &B_, &C_, &D_, scalar(result.scalar_type(), value), op));
 	return result;
 }
 

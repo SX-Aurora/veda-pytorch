@@ -1,18 +1,14 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
-struct Scalar {
-	uint64_t x, y;
-};
-
-//------------------------------------------------------------------------------
-Scalar					scalar					(const c10::ScalarType& type, const c10::Scalar& value);
-at::Scalar				toPyScalar				(const c10::ScalarType& type, const Scalar value);
 VEDATensors_dtype		dtype					(const at::Tensor& self);
 VEDATensors_dtype		dtype					(const c10::TensorImpl* self);
-VEDATensors_handle		handle					(void);
 VEDATensors_handle		handle					(const at::Tensor& self);
+VEDATensors_handle		handle					(void);
 VEDATensors_reduce_op	reduction				(int64_t reduction);
+VEDATensors_scalar		scalar					(const c10::ScalarType& type, const c10::Scalar& value);
+VEDATensors_tensor		py2veda					(const at::Tensor& self);
 at::Allocator*			allocator				(void);
+at::Scalar				toPyScalar				(const c10::ScalarType& type, const VEDATensors_scalar value);
 at::Tensor				empty					(at::IntArrayRef size, c10::optional<c10::ScalarType> dtype, c10::optional<c10::Layout> layout, c10::optional<c10::Device> device, c10::optional<bool> pin_memory, const c10::optional<c10::MemoryFormat> memory_format);
 at::Tensor				sameDevice				(const at::Tensor& self, at::Tensor other);
 at::Tensor				sameType				(const at::Tensor& self, at::Tensor other);
@@ -38,12 +34,7 @@ inline at::Tensor empty_strided(at::IntArrayRef size, at::IntArrayRef stride, c1
 }
 
 //------------------------------------------------------------------------------
-inline VEDATensors_tensor py2veda(const at::Tensor& self) {
-	return {self.sizes().size(), self.sizes(), dtype(self), ptr(self)};
-}
-
-//------------------------------------------------------------------------------
-inline at::Tensor toScalarPyTensor(const Scalar& value, const at::Tensor& self) {
+inline at::Tensor toScalarPyTensor(const VEDATensors_scalar& value, const at::Tensor& self) {
 	return at::scalar_to_tensor(toPyScalar(self.scalar_type(), value), self.device());
 }
 

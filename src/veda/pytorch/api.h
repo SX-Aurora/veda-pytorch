@@ -2,6 +2,7 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include <c10/core/DispatchKey.h>
 #include <c10/core/Allocator.h>
+#include <c10/core/DeviceType.h>
 #include <c10/core/TensorImpl.h>
 #include <c10/core/impl/DeviceGuardImplInterface.h>
 #include <c10/macros/Macros.h>
@@ -25,6 +26,7 @@
 #define DEVICE_TYPE_	VE
 #define DISPATCH_KEY	c10::DispatchKey::VE
 
+#define L_MODULE "VEDA-PYTORCH"
 #include <tungl/c.h>
 #include <veda/api.h>
 #include <veda/tensors/api.h>

@@ -10,10 +10,10 @@ inline bool isTransposed(const at::Tensor& self, const at::Tensor& src) {
 
 //------------------------------------------------------------------------------
 static at::Tensor& copy_(at::Tensor& dst_tensor, const at::Tensor& src_tensor, bool non_blocking) {
-	GUARD(src_tensor);
-
 	auto dst_device = dst_tensor.device();
 	auto src_device = src_tensor.device();
+
+	GUARD(src_device.type() == DEVICE_TYPE ? src_device : dst_device);
 
 	auto dst_type = dst_device.type();
 	auto src_type = src_device.type();
@@ -51,30 +51,32 @@ static at::Tensor& copy_(at::Tensor& dst_tensor, const at::Tensor& src_tensor, b
 		THROWIF(dst_bytes < bytes, "Dst Tensor is too small. Expected %llu but is %llu", (size_t)bytes, (size_t)dst_bytes);
 		THROWIF(src_bytes < bytes, "Src Tensor is too small. Expected %llu but is %llu", (size_t)bytes, (size_t)src_bytes);
 
-		// Copy Host to VE -----------------------------------------------------
-		if(src_type == at::DeviceType::CPU && dst_type == DEVICE_TYPE) {
-			CVEDA(vedaMemcpyHtoDAsync((VEDAdeviceptr)dst, src, bytes, 0));
-			if(!non_blocking)
-				CVEDA(vedaStreamSynchronize(0));
-		}
+		if(bytes) {
+			// Copy Host to VE -------------------------------------------------
+			if(src_type == at::DeviceType::CPU && dst_type == DEVICE_TYPE) {
+				CVEDA(vedaMemcpyHtoDAsync((VEDAdeviceptr)dst, src, bytes, 0));
+				if(!non_blocking)
+					CVEDA(vedaStreamSynchronize(0));
+			}
 
-		// Copy VE to Host -----------------------------------------------------
-		else if(src_type == DEVICE_TYPE && dst_type == at::DeviceType::CPU) {
-			CVEDA(vedaMemcpyDtoHAsync(dst, (VEDAdeviceptr)src, bytes, 0));
-			if(!non_blocking)
-				CVEDA(vedaStreamSynchronize(0));
-		}
+			// Copy VE to Host -------------------------------------------------
+			else if(src_type == DEVICE_TYPE && dst_type == at::DeviceType::CPU) {
+				CVEDA(vedaMemcpyDtoHAsync(dst, (VEDAdeviceptr)src, bytes, 0));
+				if(!non_blocking)
+					CVEDA(vedaStreamSynchronize(0));
+			}
 
-		// Copy VE to VE -------------------------------------------------------
-		else if(dst_device == src_device) {
-			CVEDA(vedaMemcpyDtoDAsync((VEDAdeviceptr)dst, (VEDAdeviceptr)src, bytes, 0));
-			if(!non_blocking)
-				CVEDA(vedaStreamSynchronize(0));
-		}
+			// Copy VE to VE ---------------------------------------------------
+			else if(dst_device == src_device) {
+				CVEDA(vedaMemcpyDtoDAsync((VEDAdeviceptr)dst, (VEDAdeviceptr)src, bytes, 0));
+				if(!non_blocking)
+					CVEDA(vedaStreamSynchronize(0));
+			}
 
-		// Unsupported ---------------------------------------------------------
-		else {
-			FAIL();
+			// Unsupported ----------------------------------------------------
+			else {
+				FAIL();
+			}
 		}
 	}
 	

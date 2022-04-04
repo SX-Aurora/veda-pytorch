@@ -7,7 +7,7 @@
 template<VEDATensors_reduce_op OP>
 at::Tensor reduce(const at::Tensor& self) {
 	GUARD(self);
-	Scalar scalar;
+	VEDATensors_scalar scalar = {};
 	auto self_ = py2veda(self);
 	CVEDA(veda_tensors_reduce_scalar(handle(self), &self_, OP, &scalar));
 	return toScalarPyTensor(scalar, self);

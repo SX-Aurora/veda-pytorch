@@ -1,10 +1,9 @@
 {
 	"name":				"veda-pytorch",
-	"version":			"@VEDAPytorch_VERSION@+torch@PYTORCH_VERSION@",
+	"version":			"@PYTORCH_VERSION@.post@VEDAPytorch_VERSION@",
 	"platform":			"linux_x86_x64",
 	"summary":			"VEDA PyTorch",
 	"readme":			"veda/pytorch/README.md",
-	"homepage":			"TODO",
 	"author":			"Nicolas Weber",
 	"author-email":		"nicolas.weber@neclab.eu",
 	"license":			"3 BSD-License",
@@ -17,9 +16,9 @@
 		"veda/pytorch/lib64/libveda-pytorch.so"
 	],
 	"requires-dist": [
-		"veda (>= @VEDA_MIN_VERSION@, < @VEDA_MAX_VERSION@)",
-		"tungl (>= @Tungl_MIN_VERSION@, < @Tungl_MAX_VERSION@)",
-		"veda-tensors (>= @VEDATensors_MIN_VERSION@, < @VEDATensors_MAX_VERSION@)",
+		"veda (>= @VEDA_VERSION_MIN@, < @VEDA_VERSION_MAX@)",
+		"tungl (>= @Tungl_VERSION_MIN@, < @Tungl_VERSION_MAX@)",
+		"veda-tensors (>= @VEDATensors_VERSION_MIN@, < @VEDATensors_VERSION_MAX@)",
 		"torch == @PYTORCH_VERSION@"
 	]
 }
