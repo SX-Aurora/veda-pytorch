@@ -9,7 +9,9 @@ void				VEGuardImpl::uncheckedSetDevice	(c10::Device d) const noexcept	{	setDevi
 
 //------------------------------------------------------------------------------
 VEGuardImpl::VEGuardImpl(void) {
-	CVEDA(vedaInit(0));
+	auto res = vedaInit(0);
+	if(res != VEDA_SUCCESS && res != VEDA_ERROR_ALREADY_INITIALIZED)
+		CVEDA(res);
 }
 
 //------------------------------------------------------------------------------

@@ -13,6 +13,7 @@ static at::Tensor clone(const at::Tensor& self, c10::optional<c10::MemoryFormat>
 
 //------------------------------------------------------------------------------
 static at::Scalar _local_scalar_dense(const at::Tensor& self) {
+	GUARD(self);
 	VEDATensors_scalar value = {};
 	CVEDA(vedaMemcpyDtoH(&value, ptr(self), veda_tensors_dtype_bytes(dtype(self))));
 	return toPyScalar(self.scalar_type(), value);

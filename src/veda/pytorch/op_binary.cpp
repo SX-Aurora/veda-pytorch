@@ -5,18 +5,19 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
-static at::Tensor& binary_kernel(at::TensorIterator iter, const VEDATensors_binary_op op) {
+static void binary_kernel(at::TensorIterator iter, const VEDATensors_binary_op op) {
 	ASSERT(iter.ntensors() == 3);
 	auto A = iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
 	auto A_ = py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
 	CVEDA(veda_tensors_binary(handle(A), &A_, &B_, &C_, op));
-	return A;
 }
 
 //------------------------------------------------------------------------------
 template<VEDATensors_binary_op op>
 static at::Tensor& binary_out(const at::Tensor& self, const at::Tensor& other, at::Tensor& result) {
-	return binary_kernel(at::TensorIterator::comparison_op(result, self, other), op);
+	auto iter = at::TensorIterator::comparison_op(result, self, other);
+	binary_kernel(iter, op);
+	return result;
 }
 
 //------------------------------------------------------------------------------
