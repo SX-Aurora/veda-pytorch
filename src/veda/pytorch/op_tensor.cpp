@@ -104,6 +104,12 @@ TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
 	m.impl("clone",					TORCH_FN(clone));
 	m.impl("_reshape_alias",		TORCH_FN(_reshape_alias));
 	m.impl("view", 					TORCH_FN(at::native::view));
+	m.impl("squeeze",				TORCH_FN(static_cast<at::Tensor(*)(const at::Tensor&)>			(&at::native::squeeze)));
+	m.impl("squeeze.dim",			TORCH_FN(static_cast<at::Tensor(*)(const at::Tensor&, int64_t)>	(&at::native::squeeze)));
+	m.impl("squeeze_",				TORCH_FN(static_cast<at::Tensor&(*)(at::Tensor&)>				(&at::native::squeeze_)));
+	m.impl("squeeze_.dim",			TORCH_FN(static_cast<at::Tensor&(*)(at::Tensor&, int64_t)>		(&at::native::squeeze_)));
+	m.impl("unsqueeze",				TORCH_FN(static_cast<at::Tensor(*)(const at::Tensor&, int64_t)>	(&at::native::unsqueeze)));
+	m.impl("unsqueeze_",			TORCH_FN(static_cast<at::Tensor&(*)(at::Tensor&, int64_t)>		(&at::native::unsqueeze_)));
 }
 
 //------------------------------------------------------------------------------
