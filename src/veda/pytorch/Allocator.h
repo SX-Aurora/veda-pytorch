@@ -35,12 +35,12 @@ inline at::Tensor empty_strided(at::IntArrayRef size, at::IntArrayRef stride, c1
 
 //------------------------------------------------------------------------------
 inline at::Tensor toScalarPyTensor(const VEDATensors_scalar& value, const at::Tensor& self) {
-	return at::scalar_to_tensor(toPyScalar(self.scalar_type(), value), self.device());
+	return at::scalar_tensor(toPyScalar(self.scalar_type(), value), at::device(self.device()).dtype(self.scalar_type()));
 }
 
 //------------------------------------------------------------------------------
 inline at::Tensor wrapped_scalar_tensor(const at::Tensor& self, at::Scalar scalar) {
-	auto tensor = c10::scalar_to_tensor(scalar, self.device()).toType(self.scalar_type());
+	auto tensor = at::scalar_tensor(scalar, at::device(self.device()).dtype(self.scalar_type()));
 	tensor.unsafeGetTensorImpl()->set_wrapped_number(true);
 	return tensor;
 }

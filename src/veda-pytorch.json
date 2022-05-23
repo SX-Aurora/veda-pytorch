@@ -8,6 +8,13 @@
 	"author-email":		"nicolas.weber@neclab.eu",
 	"license":			"3 BSD-License",
 	"requires-python":	">=3.7",
+	"download-url":		"https://github.com/sx-aurora/veda-pytorch/tags",
+	"classifier": [
+		"License :: OSI Approved :: BSD License",
+		"Programming Language :: Python :: 3 :: Only",
+		"Programming Language :: C",
+		"Programming Language :: C++"
+	],
 	"packages": [
 		"veda/pytorch"
 	],

@@ -25,10 +25,11 @@ inline void setStorage(c10::TensorImpl* self, at::StorageImpl* storage) {
 }
 
 //------------------------------------------------------------------------------
-inline void addNewStorage(c10::TensorImpl* self) {
+inline at::StorageImpl* addNewStorage(c10::TensorImpl* self) {
 	auto storage = createNewStorage(self);
 	assert(self->device() == storage->device());
 	setStorage(self, storage);
+	return storage;
 }
 
 //------------------------------------------------------------------------------
@@ -191,14 +192,14 @@ c10::TensorImpl* resizePyTensor(c10::TensorImpl* self, at::IntArrayRef size, c10
 		storage_size = self->numel();
 	}
 
-	storage_size *= veda_tensors_dtype_bytes(dtype(self));
+	storage_size *= self->dtype().itemsize(); 
 
 	if(storage_size > 0) {
 		at::StorageImpl* storage = getStorage(self);
 
 		// create new storage if necessary
 		if(!storage)
-			addNewStorage(self);
+			storage = addNewStorage(self);
 		
 		// does the storage needs to be resized?
 		auto newSize = storage_size + self->storage_offset();
@@ -212,9 +213,8 @@ c10::TensorImpl* resizePyTensor(c10::TensorImpl* self, at::IntArrayRef size, c10
 				storage->set_nbytes(newSize);
 
 				if(oldSize) {
-					if(auto copySize = std::max(storage->nbytes(), oldSize)) {
+					if(auto copySize = std::max(storage->nbytes(), oldSize))
 						CVEDA(vedaMemcpyDtoDAsync((VEDAdeviceptr)storage->data(), (VEDAdeviceptr)oldData.get(), copySize, 0));
-					}
 				}
 			} else {
 				THROW("[VE] unresizeable storage?!?");
