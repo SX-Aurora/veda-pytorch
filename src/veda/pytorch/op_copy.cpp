@@ -33,7 +33,11 @@ static at::Tensor& copy_(at::Tensor& dst_tensor, const at::Tensor& src_tensor, b
 	// Convert -----------------------------------------------------------------
 	if(isConvert) {
 		auto dst_ = py2veda(dst_tensor), src_ = py2veda(src_tensor);
-		CVEDA(veda_tensors_convert(handle(dst_tensor), &dst_, &src_));
+		if(isBool(dst_tensor)) {
+			CVEDA(veda_tensors_binary_s(handle(dst_tensor), &dst_, &src_, {}, VEDA_TENSORS_BINARY_NE));
+		} else {
+			CVEDA(veda_tensors_convert(handle(dst_tensor), &dst_, &src_));
+		}
 	}
 
 	// Transpose ---------------------------------------------------------------

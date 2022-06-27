@@ -13,6 +13,9 @@ LIST(APPEND SRC
 	${CMAKE_CURRENT_LIST_DIR}/op_mean.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_norm.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_reduce.cpp
+	${CMAKE_CURRENT_LIST_DIR}/op_softmax.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_tensor.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_unary.cpp
+	${CMAKE_CURRENT_LIST_DIR}/op_where.cpp
+	${CMAKE_CURRENT_LIST_DIR}/export.cpp
 )

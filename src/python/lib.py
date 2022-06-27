@@ -15,10 +15,15 @@ libveda			= ctypes.cdll.LoadLibrary(os.path.join(cwd, '../lib64/libveda.so.@VEDA
 # Prevent Huggingface-BERT to load TF! -----------------------------------------
 os.environ["USE_TORCH"] = "ON"
 
+libvedapytorch.veda_pytorch_get_current_device.argtypes	= []
+libvedapytorch.veda_pytorch_get_current_device.restype	= ctypes.c_int
+
 libveda.vedaCtxGetDevice.argtypes				= [ctypes.c_void_p]
 libveda.vedaCtxGetDevice.restype				= ctypes.c_int
 libveda.vedaCtxPushCurrent.argtypes				= [ctypes.c_void_p]
 libveda.vedaCtxPushCurrent.restype				= ctypes.c_int
+libveda.vedaCtxSetCurrent.argtypes				= [ctypes.c_void_p]
+libveda.vedaCtxSetCurrent.restype				= ctypes.c_int
 libveda.vedaCtxPopCurrent.argtypes				= [ctypes.c_void_p]
 libveda.vedaCtxPopCurrent.restype				= ctypes.c_int
 libveda.vedaDevicePrimaryCtxRetain.argtypes		= [ctypes.c_void_p, ctypes.c_int]
@@ -40,10 +45,20 @@ def current_device():
 	libveda.vedaCtxGetDevice(ctypes.byref(device))
 	return device.value
 
+def push_device(idx):
+	ctx = ctypes.c_void_p()
+	libveda.vedaDevicePrimaryCtxRetain(ctypes.byref(ctx), idx)
+	libveda.vedaCtxPushCurrent(ctx)
+
+def pop_device():
+	ctx = ctypes.c_void_p()
+	libveda.vedaCtxPopCurrent(ctypes.byref(ctx))
+
 def set_device(idx):
 	ctx = ctypes.c_void_p()
 	libveda.vedaDevicePrimaryCtxRetain(ctypes.byref(ctx), idx)
 	libveda.vedaCtxPushCurrent(ctx)
+	libveda.vedaCtxSetCurrent(ctypes.byref(ctx))
 
 def device_count():
 	cnt = ctypes.c_int()
@@ -51,16 +66,16 @@ def device_count():
 	return cnt.value
 
 def get_device_idx(device):
-	if device is None:						return -1
+	if device is None:						return libvedapytorch.veda_pytorch_get_current_device()
 	elif isinstance(device, torch.device):	return device.index
 	elif isinstance(device, int):			return device
 	raise Exception("Invalid type, expected None, torch.device or int but is {}".format(type(device)))
 
 def memory_allocated(device=None):
-	device	= get_device_idx(device)
-	total	= ctypes.c_long()
-	free	= ctypes.c_long()
+	device, total, free	= get_device_idx(device), ctypes.c_long(), ctypes.c_long()
+	push_device(device)
 	libveda.vedaMemGetInfo(ctypes.byref(free), ctypes.byref(total))
+	pop_device()
 	return total.value - free.value
 
 def to_ve(self, device=None, non_blocking=False, memory_format=torch.preserve_format):
@@ -83,21 +98,18 @@ class Device:
 	def __enter__(self):
 		assert isinstance(self.m_device, int)
 		self.m_previous = current_device()
-		set_device(self.m_device)
+		push_device(self.m_device)
 		return self
 
 	def __exit__(self, type, value, traceback):
 		assert isinstance(self.m_previous, int)
-		ctx = ctypes.c_void_p()
-		libveda.vedaCtxPopCurrent(ctypes.byref(ctx))
+		pop_device()
 		
 class DeviceOf(Device):
 	def __init__(self, tensor):
 		super().__init__(tensor.device)
 
 def synchronize(device=None):
-	device	= get_device_idx(device)
-
 	flags	= ctypes.c_int()
 	active	= ctypes.c_int()
 
@@ -107,11 +119,11 @@ def synchronize(device=None):
 			with Device(device):
 				libveda.vedaCtxSynchronize()
 
-	if device == -1:
+	if device is None:
 		for i in range(device_count()):
 			sync(i)
 	else:
-		sync(device)
+		sync(get_device_idx(device))
 
 torch.ve			= collections.namedtuple('VE', ['synchronize', 'is_available', 'current_device', 'set_device', 'device_count', 'device', 'device_of', 'memory_allocated'])(synchronize, is_available, current_device, set_device, device_count, Device, DeviceOf, memory_allocated)
 torch.Tensor.ve		= to_ve

@@ -2,6 +2,15 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
+static VEGuardImpl* s_guard = 0;
+
+//------------------------------------------------------------------------------
+const VEGuardImpl* getGuardImpl(void) {
+	assert(s_guard);
+	return s_guard;
+}
+
+//------------------------------------------------------------------------------
 c10::DeviceType		VEGuardImpl::type				(void) const					{	return DEVICE_TYPE;										}
 c10::Stream			VEGuardImpl::exchangeStream		(c10::Stream s) const noexcept	{	return c10::Stream(c10::Stream::DEFAULT, getDevice());	}
 c10::Stream			VEGuardImpl::getStream			(c10::Device d) const noexcept	{	return c10::Stream(c10::Stream::DEFAULT, getDevice());	}
@@ -9,6 +18,8 @@ void				VEGuardImpl::uncheckedSetDevice	(c10::Device d) const noexcept	{	setDevi
 
 //------------------------------------------------------------------------------
 VEGuardImpl::VEGuardImpl(void) {
+	assert(s_guard == 0);
+	s_guard = this;
 	auto res = vedaInit(0);
 	if(res != VEDA_SUCCESS && res != VEDA_ERROR_ALREADY_INITIALIZED)
 		CVEDA(res);

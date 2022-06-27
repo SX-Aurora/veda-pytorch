@@ -49,4 +49,7 @@ struct VEGuardImpl final : public c10::impl::DeviceGuardImplInterface {
 };
 
 //------------------------------------------------------------------------------
+const VEGuardImpl* getGuardImpl(void);
+
+//------------------------------------------------------------------------------
 #include "__ns.h"

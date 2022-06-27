@@ -136,6 +136,11 @@ size_t numel(const at::Tensor& self) {
 }
 
 //------------------------------------------------------------------------------
+bool isBool(const at::Tensor& self) {
+	return self.scalar_type() == c10::ScalarType::Bool;
+}
+
+//------------------------------------------------------------------------------
 VEDATensors_dtype dtype(const at::Tensor& self) {
 	switch(self.scalar_type()) {
 		case c10::ScalarType::Byte:				return VEDA_TENSORS_DTYPE_U8;
@@ -151,6 +156,11 @@ VEDATensors_dtype dtype(const at::Tensor& self) {
 	}
 	
 	THROW("Unknown PyTorch c10::ScalarType"); // TODO: << self.scalar_type());
+}
+
+//------------------------------------------------------------------------------
+bool isBool(const c10::TensorImpl* self) {
+	return self->dtype() == caffe2::TypeMeta::Make<bool>();
 }
 
 //------------------------------------------------------------------------------
@@ -232,8 +242,9 @@ at::Allocator* allocator(void) {
 			VEDAdevice device;
 			CVEDA(vedaCtxGetDevice(&device));
 
-			VEDAdeviceptr ptr;
-			CVEDA(vedaMemAllocAsync(&ptr, nbytes, 0));
+			VEDAdeviceptr ptr = 0;
+			if(nbytes)
+				CVEDA(vedaMemAllocAsync(&ptr, nbytes, 0));
 			return {ptr, ptr, &veFree, {DEVICE_TYPE, (c10::DeviceIndex)device}};
 		};
 

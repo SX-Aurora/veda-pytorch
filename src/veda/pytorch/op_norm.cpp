@@ -92,14 +92,13 @@ static at::ScalarType get_dtype(at::Tensor& result, const at::Tensor& self, c10:
 }
 
 //------------------------------------------------------------------------------
-static void norm_kernel(at::TensorIterator& iter, at::Scalar p) {
+static void norm_kernel(at::TensorIterator& iter, at::Scalar p, at::IntArrayRef dims) {
 	float val;
-	if		(p.isIntegral(false))	val = p.to<int64_t>();
-	else if (p.isFloatingPoint())	val = p.to<float>();
+	if		(p.isIntegral(false))	val = (float)	p.to<int64_t>	();
+	else if (p.isFloatingPoint())	val = 			p.to<float>		();
 	else THROW("norm_kernel_tensor_iterator_impl expects norm to be integer or float");
 
 	auto A = iter.tensor(0), B = iter.tensor(1);
-	THROWIF(A.numel() != 1, "torch.norm only implemented for outputting single value!");
 	THROWIF(dtype(A) != dtype(B), "torch.norm only supports identical storage types");
 
 	VEDATensors_reduce_op op;
@@ -111,11 +110,17 @@ static void norm_kernel(at::TensorIterator& iter, at::Scalar p) {
 	else	THROW("Unknown torch.norm type: %f", val);
 
 	auto A_ = py2veda(A), B_ = py2veda(B);
-	CVEDA(veda_tensors_reduce(handle(A), &A_, &B_, op));
+	if(dims.size() == 0) {
+		CVEDA(veda_tensors_reduce(handle(A), &A_, &B_, op));
+	} else if(dims.size() == 1) {
+		CVEDA(veda_tensors_reduce_dim(handle(A), &A_, 0, &B_, op, dims[0]));
+	} else {
+		THROW("Unsupported torch.norm");
+	}
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor& norm_out(at::Tensor& result, const at::Tensor& self, c10::optional<at::Scalar> opt_p, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
+static at::Tensor& _norm(const at::Tensor& self, const c10::optional<at::Scalar>& opt_p, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype, at::Tensor& result) {
 	auto p = opt_p.value_or(2.0);
 	THROWIF(self.layout() != at::Layout::Strided, "norm only supports strided layout");
 
@@ -125,91 +130,59 @@ static at::Tensor& norm_out(at::Tensor& result, const at::Tensor& self, c10::opt
 
 	at::ScalarType dtype = get_dtype(result, self, opt_dtype, true);
 	auto iter = make_reduction("norm", result, self, dim, keepdim, dtype);
-	if (iter.numel() == 0) {
-		result.zero_();
-	} else {
-		norm_kernel(iter, p);
-	}
+	if(iter.numel() == 0)	result.zero_();
+	else					norm_kernel(iter, p, dim);
 	return result;
 }
 
 //------------------------------------------------------------------------------
-static inline at::Tensor _norm(const at::Tensor &self, at::Scalar p) {
-	if(self.is_sparse()) {
-		THROW("VEDA PyTorch does not support sparse tensors");
-		return at::Tensor();
-	} else {
-		THROWIF(!(self.layout() == at::Layout::Strided), "norm only supports strided layout");
-		THROWIF(!(at::isFloatingType(self.scalar_type()) || at::isComplexType(self.scalar_type())), "norm only supports floating-point dtypes");
-		at::Tensor result;
-		return norm_out(result, self, p, at::IntArrayRef{}, false, c10::nullopt);
-	}
+static at::Tensor& norm_dtype_out(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::IntArrayRef dim, bool keepdim, c10::ScalarType dtype, at::Tensor& result) {
+	return _norm(self, p, dim, keepdim, c10::optional<at::ScalarType>(dtype), result);
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor& norm_out(at::Tensor& result, const at::Tensor& self, c10::optional<at::Scalar> p, at::IntArrayRef dim, bool keepdim, c10::ScalarType dtype) {
-	return norm_out(result, self, p, dim, keepdim, c10::optional<at::ScalarType>(dtype));
+static at::Tensor& norm_out(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::IntArrayRef dim, bool keepdim, at::Tensor& result) {
+	return norm_dtype_out(self, p, dim, keepdim, {}, result);
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor& norm_out(at::Tensor& result, const at::Tensor& self, c10::optional<at::Scalar> p, at::IntArrayRef dim, bool keepdim) {
-	return norm_out(result, self, p, dim, keepdim, c10::nullopt);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor norm(const at::Tensor& self, c10::optional<at::Scalar> p, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
+inline at::Tensor norm(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
 	at::Tensor result;
-	return norm_out(result, self, p, dim, keepdim, opt_dtype);
+	return _norm(self, p, dim, keepdim, opt_dtype, result);
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor norm(const at::Tensor& self, c10::optional<at::Scalar> p, at::IntArrayRef dim, bool keepdim, at::ScalarType dtype) {
+static at::Tensor norm_ScalarOpt_dim_dtype(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::IntArrayRef dim, bool keepdim, at::ScalarType dtype) {
 	return norm(self, p, dim, keepdim, c10::optional<at::ScalarType>(dtype));
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor norm(const at::Tensor& self, c10::optional<at::Scalar> p, at::ScalarType dtype) {
+static at::Tensor norm_ScalarOpt_dtype(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::ScalarType dtype) {
 	return norm(self, p, at::IntArrayRef{}, false, c10::optional<at::ScalarType>(dtype));
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor norm(const at::Tensor& self, c10::optional<at::Scalar> p, at::IntArrayRef dim, bool keepdim) {
+static at::Tensor norm_ScalarOpt_dim(const at::Tensor& self, const c10::optional<at::Scalar>& p, at::IntArrayRef dim, bool keepdim) {
 	return norm(self, p, dim, keepdim, c10::nullopt);
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor norm(const at::Tensor& self, c10::Scalar p) {
-	return _norm(self, p);
+static at::Tensor norm_Scalar(const at::Tensor& self, const c10::Scalar& p) {
+	THROWIF(self.is_sparse(), "VEDA PyTorch does not support sparse tensors");
+	THROWIF(!(self.layout() == at::Layout::Strided), "norm only supports strided layout");
+	THROWIF(!(at::isFloatingType(self.scalar_type()) || at::isComplexType(self.scalar_type())), "norm only supports floating-point dtypes");
+	at::Tensor result;
+	return _norm(self, p, at::IntArrayRef{}, false, {}, result);
 }
 
 //------------------------------------------------------------------------------
-namespace {
-//	static auto registry = c10::RegisterOperators()
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.ScalarOpt_dtype(Tensor self, Scalar? p, *, ScalarType dtype) -> Tensor")
-//			.kernel<at::Tensor(const at::Tensor&, c10::optional<at::Scalar>, at::ScalarType)>(DISPATCH_KEY, &norm)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.Scalar(Tensor self, Scalar p=2) -> Tensor")
-//			.kernel<at::Tensor(const at::Tensor&, c10::Scalar)>(DISPATCH_KEY, &norm)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.ScalarOpt_dim_dtype(Tensor self, Scalar? p, int[1] dim, bool keepdim, *, ScalarType dtype) -> Tensor")
-//			.kernel<at::Tensor(const at::Tensor&, c10::optional<at::Scalar>, at::IntArrayRef, bool, at::ScalarType)>(DISPATCH_KEY, &norm)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.ScalarOpt_dim(Tensor self, Scalar? p, int[1] dim, bool keepdim=False) -> Tensor")
-//			.kernel<at::Tensor(const at::Tensor&, c10::optional<at::Scalar>, at::IntArrayRef, bool)>(DISPATCH_KEY, &norm)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.dtype_out(Tensor self, Scalar? p, int[1] dim, bool keepdim, *, ScalarType dtype, Tensor(a!) out) -> Tensor(a!)")
-//			.kernel<at::Tensor&(at::Tensor&, const at::Tensor&, c10::optional<at::Scalar>, at::IntArrayRef, bool, c10::ScalarType)>(DISPATCH_KEY, &norm_out)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//		.op(torch::RegisterOperators::options()
-//			.schema("aten::norm.out(Tensor self, Scalar? p, int[1] dim, bool keepdim=False, *, Tensor(a!) out) -> Tensor(a!)")
-//			.kernel<at::Tensor&(at::Tensor&, const at::Tensor&, c10::optional<at::Scalar>, at::IntArrayRef, bool)>(DISPATCH_KEY, &norm_out)
-//			.aliasAnalysis(c10::AliasAnalysisKind::FROM_SCHEMA))
-//	;
+TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
+	m.impl("norm.ScalarOpt_dim",		TORCH_FN(norm_ScalarOpt_dim));
+	m.impl("norm.Scalar",				TORCH_FN(norm_Scalar));
+	m.impl("norm.ScalarOpt_dtype",		TORCH_FN(norm_ScalarOpt_dtype));
+	m.impl("norm.ScalarOpt_dim_dtype",	TORCH_FN(norm_ScalarOpt_dim_dtype));
+	m.impl("norm.dtype_out",			TORCH_FN(norm_dtype_out));
+	m.impl("norm.out",					TORCH_FN(norm_out));
 }
 
 //------------------------------------------------------------------------------
