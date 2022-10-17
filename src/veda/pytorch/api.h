@@ -20,6 +20,7 @@
 #include <ATen/native/ReduceOpsUtils.h>
 #include <ATen/WrapDimUtils.h>
 #include <torch/library.h>
+#include <torch/csrc/api/include/torch/version.h>
 #pragma GCC diagnostic pop
 
 #define DEVICE_TYPE		c10::DeviceType::VE
@@ -42,6 +43,8 @@ inline void check(VEDAresult res, const char* file, const int line) {
 	}
 }
 #include "__ns.h"
+
+#define TORCH_VERSION_ ((TORCH_VERSION_MAJOR * 10000) + (TORCH_VERSION_MINOR * 100) + (TORCH_VERSION_PATCH))
 
 #include "Guard.h"
 #include "Allocator.h"

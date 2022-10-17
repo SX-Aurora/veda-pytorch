@@ -21,7 +21,11 @@ static at::Tensor _s_where(const at::Tensor& condition, const at::Tensor& self, 
 
 //------------------------------------------------------------------------------
 TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
+#if TORCH_VERSION_ < 11200
 	m.impl("_s_where", _s_where);
+#else
+	m.impl("aten::where.self", _s_where);
+#endif
 }
 
 //------------------------------------------------------------------------------

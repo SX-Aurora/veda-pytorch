@@ -42,6 +42,7 @@ static at::Tensor& unary_c_kernel(at::Tensor& out, const at::Tensor& self, const
       		.check_all_same_dtype(false));
 		auto& A = iter.tensor(0);
 		auto& B = iter.tensor(1);
+
 		auto A_ = py2veda(A), B_ = py2veda(B);
 		CVEDA(veda_tensors_unary_c(handle(A), &A_, &B_, op));
 		return out;
@@ -52,7 +53,11 @@ static at::Tensor& unary_c_kernel(at::Tensor& out, const at::Tensor& self, const
 //------------------------------------------------------------------------------
 template<VEDATensors_unary_op OP>
 static at::Tensor unary_c(const at::Tensor& self) {
+#if TORCH_VERSION_ < 11200
 	auto out = empty_as(self, c10::toValueType(self.scalar_type()));
+#else
+	auto out = empty_as(self, c10::toRealValueType(self.scalar_type()));
+#endif
 	return unary_c_kernel(out, self, OP);
 }
 
@@ -251,7 +256,53 @@ at::Tensor& unary_ttts_out(const at::Tensor& self, const at::Tensor& tensor1, co
 // ISNAN
 //------------------------------------------------------------------------------
 at::Tensor isnan(const at::Tensor& self) {
+#if TORCH_VERSION_ < 11200
 	return self != self;
+#else
+	return self.ne(self);
+#endif
+}
+
+//------------------------------------------------------------------------------
+// CLAMP
+//------------------------------------------------------------------------------
+static at::Tensor& clamp_tss_out(const at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta, at::Tensor& out) {
+	if(alpha && beta)	return unary_tss_kernel(out, self, alpha.value(), beta.value(), VEDA_TENSORS_UNARY_CLAMP);
+	if(alpha)			return unary_ts_kernel(out, self, alpha.value(), VEDA_TENSORS_UNARY_MAX);
+	if(beta)			return unary_ts_kernel(out, self, beta.value(), VEDA_TENSORS_UNARY_MIN);
+	out = self;
+	return out;
+}
+
+//------------------------------------------------------------------------------
+static at::Tensor clamp_tss(const at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta) {
+	auto out = empty_as(self);
+	return clamp_tss_out(self, alpha, beta, out);
+}
+
+//------------------------------------------------------------------------------
+static at::Tensor& clamp_tss_(at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta) {
+	return clamp_tss_out(self, alpha, beta, self);
+}
+
+//------------------------------------------------------------------------------
+static at::Tensor& clamp_ttt_out(const at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2, at::Tensor& out) {
+	if(tensor1 && tensor2)	return unary_ttt_kernel(out, self, tensor1.value(), tensor2.value(), VEDA_TENSORS_UNARY_CLAMP);
+	if(tensor1)				return unary_tt_kernel(out, self, tensor1.value(), VEDA_TENSORS_UNARY_MAX);
+	if(tensor2)				return unary_tt_kernel(out, self, tensor2.value(), VEDA_TENSORS_UNARY_MIN);
+	out = self;
+	return out;
+}
+
+//------------------------------------------------------------------------------
+static at::Tensor clamp_ttt(const at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2) {
+	auto out = empty_as(self);
+	return clamp_ttt_out(self, tensor1, tensor2, out);
+}
+
+//------------------------------------------------------------------------------
+static at::Tensor& clamp_ttt_(at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2) {
+	return clamp_ttt_out(self, tensor1, tensor2, self);
 }
 
 

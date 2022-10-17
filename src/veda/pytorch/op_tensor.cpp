@@ -1,5 +1,20 @@
 #include "api.h"
 
+#if TORCH_VERSION_ >= 11200
+namespace at {
+	namespace native {
+		at::Tensor	as_strided_tensorimpl	(const Tensor&, IntArrayRef, IntArrayRef, optional<int64_t>);
+		at::Tensor	squeeze					(const at::Tensor&);
+		at::Tensor	squeeze					(const at::Tensor&, int64_t);
+		at::Tensor	unsqueeze				(const at::Tensor&, int64_t);
+		at::Tensor	view					(const at::Tensor&, at::IntArrayRef);
+		at::Tensor&	squeeze_				(at::Tensor&);
+		at::Tensor&	squeeze_				(at::Tensor&, int64_t);
+		at::Tensor&	unsqueeze_				(at::Tensor&, int64_t);
+	}
+}
+#endif
+
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
@@ -99,11 +114,11 @@ TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
 	m.impl("empty.memory_format",	empty);
 	m.impl("empty_strided",			TORCH_FN(empty_strided));
 	m.impl("resize_",				TORCH_FN(resize));
-	m.impl("as_strided",			TORCH_FN(at::native::as_strided_tensorimpl));
 	m.impl("_local_scalar_dense",	TORCH_FN(_local_scalar_dense));
-	m.impl("clone",					TORCH_FN(clone));
 	m.impl("_reshape_alias",		TORCH_FN(_reshape_alias));
+	m.impl("clone",					TORCH_FN(clone));
 	m.impl("view", 					TORCH_FN(at::native::view));
+	m.impl("as_strided",			TORCH_FN(at::native::as_strided_tensorimpl));
 	m.impl("squeeze",				TORCH_FN(static_cast<at::Tensor(*)(const at::Tensor&)>			(&at::native::squeeze)));
 	m.impl("squeeze.dim",			TORCH_FN(static_cast<at::Tensor(*)(const at::Tensor&, int64_t)>	(&at::native::squeeze)));
 	m.impl("squeeze_",				TORCH_FN(static_cast<at::Tensor&(*)(at::Tensor&)>				(&at::native::squeeze_)));

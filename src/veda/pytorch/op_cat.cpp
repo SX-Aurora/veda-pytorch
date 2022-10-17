@@ -5,16 +5,18 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
-static at::Tensor cat(at::TensorList tensors, int64_t dim) {
+#if TORCH_VERSION_ >= 11200
+static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
 	// TODO: checks that all dims match up!
 	assert(tensors.size() > 0);
-	auto& T = tensors.front();
 	if(tensors.size() == 1)
-		return T;
+		return out;
 
 	GUARD(tensors);
 
 	// Get Sizes ---------------------------------------------------------------
+	auto& T = tensors.front();
+
 	std::vector<int64_t> sizes;
 	sizes.reserve(T.sizes().size());
 	for(auto& i : T.sizes())
@@ -27,7 +29,7 @@ static at::Tensor cat(at::TensorList tensors, int64_t dim) {
 	sizes[dim] = dimSize;
 
 	// Create output tensor ----------------------------------------------------
-	auto output = empty(sizes, c10::typeMetaToScalarType(T.dtype()), T.layout(), T.device(), false, at::MemoryFormat::Contiguous);
+	out.resize_(sizes);
 
 	// Call VE -----------------------------------------------------------------
 	std::vector<VEDATensors_tensor> inputs;
@@ -36,16 +38,28 @@ static at::Tensor cat(at::TensorList tensors, int64_t dim) {
 	for(auto& t : tensors)
 		inputs.emplace_back(py2veda(t));
 
-	auto output_ = py2veda(output);
-	CVEDA(veda_tensors_cat(handle(output), (int)inputs.size(), inputs.data(), &output_, (int)dim));
+	auto output_ = py2veda(out);
+	CVEDA(veda_tensors_cat(handle(out), (int)inputs.size(), inputs.data(), &output_, (int)dim));
 
-	return output;
+	return out;
+}
+#endif
+
+//------------------------------------------------------------------------------
+static at::Tensor cat_(at::TensorList tensors, int64_t dim) {
+	auto& T		= tensors.front();
+	auto out	= empty({0}, c10::typeMetaToScalarType(T.dtype()), T.layout(), T.device(), false, at::MemoryFormat::Contiguous);
+	cat(tensors, dim, out);
+	return out;
 }
 
 //------------------------------------------------------------------------------
 TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
+#if TORCH_VERSION_ < 11200
 	m.impl("_cat", TORCH_FN(cat));
-	// TODO: m.impl("_cat.out", torch::dispatch(DispatchKey::CPU, torch::CppFunction::makeFromUnboxedFunction(&CPUType::_cat_out_out)));
+#else
+	m.impl("aten::cat.out", TORCH_FN(cat));
+#endif
 }
 
 //------------------------------------------------------------------------------
