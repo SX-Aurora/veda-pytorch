@@ -6,14 +6,11 @@ import collections
 import torch # make sure pytorch was loaded before
 
 if not "@PYTORCH_VERSION@" in torch.__version__:
-	raise sol.Exception("The NEC SX-Aurora TSUBASA can only be used with PyTorch v@PYTORCH_VERSION@ but you are using {}".format(torch.__version__))
+	raise Exception(f"The NEC SX-Aurora TSUBASA can only be used with PyTorch v@PYTORCH_VERSION@ but you are using {torch.__version__}")
 
 cwd				= os.path.dirname(__file__)
 libvedapytorch	= ctypes.cdll.LoadLibrary(os.path.join(cwd, 'lib64/libveda-pytorch.so'))
 libveda			= ctypes.cdll.LoadLibrary(os.path.join(cwd, '../lib64/libveda.so.@VEDA_VERSION_MAJOR@'))
-
-# Prevent Huggingface-BERT to load TF! -----------------------------------------
-os.environ["USE_TORCH"] = "ON"
 
 libvedapytorch.veda_pytorch_get_current_device.argtypes	= []
 libvedapytorch.veda_pytorch_get_current_device.restype	= ctypes.c_int
@@ -125,6 +122,25 @@ def synchronize(device=None):
 	else:
 		sync(get_device_idx(device))
 
-torch.ve			= collections.namedtuple('VE', ['synchronize', 'is_available', 'current_device', 'set_device', 'device_count', 'device', 'device_of', 'memory_allocated'])(synchronize, is_available, current_device, set_device, device_count, Device, DeviceOf, memory_allocated)
+torch.ve = collections.namedtuple('VE',
+	[
+		'synchronize',
+		'is_available',
+		'current_device',
+		'set_device',
+		'device_count',
+		'device',
+		'device_of',
+		'memory_allocated'
+	])(
+		synchronize, 
+		is_available,
+		current_device,
+		set_device,
+		device_count,
+		Device,
+		DeviceOf,
+		memory_allocated
+	)
 torch.Tensor.ve		= to_ve
 torch.nn.Module.ve	= to_model_ve

@@ -5,8 +5,11 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
-#if TORCH_VERSION_ >= 11200
+#if TORCH_VERSION_ >= 11300
+static at::Tensor& cat(const at::ITensorListRef& tensors, int64_t dim, at::Tensor& out) {
+#elif TORCH_VERSION_ >= 11200
 static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
+#endif
 	// TODO: checks that all dims match up!
 	assert(tensors.size() > 0);
 	if(tensors.size() == 1)
@@ -43,7 +46,6 @@ static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
 
 	return out;
 }
-#endif
 
 //------------------------------------------------------------------------------
 static at::Tensor cat_(at::TensorList tensors, int64_t dim) {

@@ -25,6 +25,7 @@ public:
 	inline VEGuard(const c10::Device device)			: m_device(device)					{	init();	}
 	inline VEGuard(const at::Tensor& self)				: m_device(self.device())			{	init();	}
 	inline VEGuard(const at::TensorList& list)			: m_device(list.front().device())	{	init();	}
+	inline VEGuard(const at::ITensorListRef& list)		: m_device(list.front().device())	{	init();	}
 	inline VEGuard(const at::TensorOptions& options)	: m_device(options.device())		{	init();	}
 	inline VEGuard(const c10::DeviceIndex device)		: m_device({DEVICE_TYPE, device})	{	init();	}
 	inline VEGuard(const c10::TensorImpl* self)			: m_device(self->device())			{	init();	}

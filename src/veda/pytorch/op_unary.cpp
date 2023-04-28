@@ -305,49 +305,6 @@ static at::Tensor& clamp_ttt_(at::Tensor& self, const c10::optional<at::Tensor>&
 	return clamp_ttt_out(self, tensor1, tensor2, self);
 }
 
-
-//------------------------------------------------------------------------------
-// CLAMP
-//------------------------------------------------------------------------------
-static at::Tensor& clamp_tss_out(const at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta, at::Tensor& out) {
-	if(alpha && beta)	return unary_tss_kernel(out, self, alpha.value(), beta.value(), VEDA_TENSORS_UNARY_CLAMP);
-	if(alpha)			return unary_ts_kernel(out, self, alpha.value(), VEDA_TENSORS_UNARY_MAX);
-	if(beta)			return unary_ts_kernel(out, self, beta.value(), VEDA_TENSORS_UNARY_MIN);
-	out = self;
-	return out;
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor clamp_tss(const at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta) {
-	auto out = empty_as(self);
-	return clamp_tss_out(self, alpha, beta, out);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor& clamp_tss_(at::Tensor& self, const c10::optional<at::Scalar>& alpha, const c10::optional<at::Scalar>& beta) {
-	return clamp_tss_out(self, alpha, beta, self);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor& clamp_ttt_out(const at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2, at::Tensor& out) {
-	if(tensor1 && tensor2)	return unary_ttt_kernel(out, self, tensor1.value(), tensor2.value(), VEDA_TENSORS_UNARY_CLAMP);
-	if(tensor1)				return unary_tt_kernel(out, self, tensor1.value(), VEDA_TENSORS_UNARY_MAX);
-	if(tensor2)				return unary_tt_kernel(out, self, tensor2.value(), VEDA_TENSORS_UNARY_MIN);
-	out = self;
-	return out;
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor clamp_ttt(const at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2) {
-	auto out = empty_as(self);
-	return clamp_ttt_out(self, tensor1, tensor2, out);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor& clamp_ttt_(at::Tensor& self, const c10::optional<at::Tensor>& tensor1, const c10::optional<at::Tensor>& tensor2) {
-	return clamp_ttt_out(self, tensor1, tensor2, self);
-}
-
 //------------------------------------------------------------------------------
 // Register
 //------------------------------------------------------------------------------
@@ -375,6 +332,8 @@ TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
 	m.impl("reciprocal.out",		TORCH_FN(unary_t_out	<VEDA_TENSORS_UNARY_RECIPROCAL>));
 	m.impl("sqrt",					TORCH_FN(unary_t		<VEDA_TENSORS_UNARY_SQRT>));
 	m.impl("sqrt.out",				TORCH_FN(unary_t_out	<VEDA_TENSORS_UNARY_SQRT>));
+	m.impl("log1p",					TORCH_FN(unary_t		<VEDA_TENSORS_UNARY_LOG1P>));
+	m.impl("log1p.out",				TORCH_FN(unary_t_out	<VEDA_TENSORS_UNARY_LOG1P>));
 
 	m.impl("clamp",					TORCH_FN(clamp_tss));
 	m.impl("clamp_",				TORCH_FN(clamp_tss_));

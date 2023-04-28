@@ -5,6 +5,13 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
+#if TORCH_VERSION_ >= 11300
+using IntArrayRef = at::OptionalIntArrayRef;
+#else
+using IntArrayRef = at::IntArrayRef;
+#endif
+
+//------------------------------------------------------------------------------
 template<VEDATensors_reduce_op OP>
 static inline void x_stub(at::TensorIterator& iter) {
 	ASSERT(iter.ntensors() == 2);
@@ -35,8 +42,11 @@ static void mean_stub(at::TensorIterator& iter) {
 //------------------------------------------------------------------------------
 static void sum_stub(at::TensorIterator& iter) {
 	auto A = iter.tensor(0), B = iter.tensor(1);
-	if(A.numel() == B.numel())	CVEDA(vedaMemcpyDtoDAsync(ptr(A), ptr(B), A.nbytes(), 0));
-	else						x_stub<VEDA_TENSORS_REDUCE_SUM>(iter);
+	if(A.numel() == B.numel()) {
+		CVEDA(vedaMemcpyDtoDAsync(ptr(A), ptr(B), A.nbytes(), 0));
+	} else {
+		x_stub<VEDA_TENSORS_REDUCE_SUM>(iter);
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -66,7 +76,7 @@ static inline at::ScalarType get_dtype_from_self(const at::Tensor& self, c10::op
 //------------------------------------------------------------------------------
 // Mean
 //------------------------------------------------------------------------------
-static at::Tensor& mean_IntList_out(const at::Tensor& self, at::IntArrayRef dim, bool keepdim, c10::optional<c10::ScalarType> opt_dtype, at::Tensor& result) {
+static at::Tensor& mean_IntList_out(const at::Tensor& self, IntArrayRef dim, bool keepdim, c10::optional<c10::ScalarType> opt_dtype, at::Tensor& result) {
 	at::ScalarType dtype = get_dtype_from_result(result, opt_dtype);
 	auto iter = at::native::make_reduction("mean", result, self, dim, keepdim, dtype);
 	mean_stub(iter);
@@ -74,7 +84,7 @@ static at::Tensor& mean_IntList_out(const at::Tensor& self, at::IntArrayRef dim,
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor mean_dim_IntList(const at::Tensor& self, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
+static at::Tensor mean_dim_IntList(const at::Tensor& self, IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
 	at::ScalarType dtype = get_dtype_from_self(self, opt_dtype, true);
 	at::Tensor result = at::native::create_reduction_result(self, dim, keepdim, dtype);
 	return mean_IntList_out(self, dim, keepdim, dtype, result);
@@ -98,7 +108,7 @@ static at::Tensor mean(const at::Tensor& self, c10::optional<c10::ScalarType> dt
 //------------------------------------------------------------------------------
 // Sum
 //------------------------------------------------------------------------------
-static at::Tensor& sum_IntList_out(const at::Tensor& self, at::IntArrayRef dim, bool keepdim, c10::optional<c10::ScalarType> opt_dtype, at::Tensor& result) {
+static at::Tensor& sum_IntList_out(const at::Tensor& self, IntArrayRef dim, bool keepdim, c10::optional<c10::ScalarType> opt_dtype, at::Tensor& result) {
 	at::ScalarType dtype = get_dtype_from_result(result, opt_dtype);
 	auto iter = at::native::make_reduction("sum", result, self, dim, keepdim, dtype);
 	if(iter.numel() == 0)
@@ -109,7 +119,7 @@ static at::Tensor& sum_IntList_out(const at::Tensor& self, at::IntArrayRef dim, 
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor sum_dim_IntList(const at::Tensor& self, at::IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
+static at::Tensor sum_dim_IntList(const at::Tensor& self, IntArrayRef dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype) {
 	at::ScalarType dtype = get_dtype_from_self(self, opt_dtype, true);
 	at::Tensor result = at::native::create_reduction_result(self, dim, keepdim, dtype);
 	return sum_IntList_out(self, dim, keepdim, dtype, result);

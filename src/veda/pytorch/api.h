@@ -30,9 +30,14 @@
 #define L_MODULE "VEDA-PYTORCH"
 #include <tungl/c.h>
 #include <veda/api.h>
+#include <veda/cpp/api.h>
 #include <veda/tensors/api.h>
 #undef CVEDA
-#define CVEDA(...) veda::pytorch::check(__VA_ARGS__, __FILE__, __LINE__)
+#define CVEDA(...) try {\
+	veda::pytorch::check(__VA_ARGS__, __FILE__, __LINE__);\
+} catch(const veda::cpp::Exception& e) {\
+	THROWAT(L_MODULE, e.file().data(), e.line(), "VEDA_ERROR: %s", e.what().data());\
+}
 
 #include "__ns.h"
 inline void check(VEDAresult res, const char* file, const int line) {
