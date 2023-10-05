@@ -275,16 +275,17 @@ VEDATensors_handle handle(const at::Tensor& self) {
 
 //------------------------------------------------------------------------------
 at::Tensor sameDevice(const at::Tensor& self, at::Tensor other) {
-	if(self.device() != other.device())
-		other = other.to(self.device());
-	return other;
+	return self.device() != other.device() ? other.to(self.device()) : other;
+}
+
+//------------------------------------------------------------------------------
+at::Tensor toType(at::Tensor tensor, const c10::ScalarType dtype) {
+	return tensor.scalar_type() != dtype ? tensor.toType(dtype) : tensor;
 }
 
 //------------------------------------------------------------------------------
 at::Tensor sameType(const at::Tensor& self, at::Tensor other) {
-	if(self.scalar_type() != other.scalar_type())
-		other = other.toType(self.scalar_type());
-	return other;
+	return toType(other, self.scalar_type());
 }
 
 //------------------------------------------------------------------------------

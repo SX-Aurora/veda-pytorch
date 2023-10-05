@@ -4,6 +4,36 @@
 //------------------------------------------------------------------------------
 // T
 //------------------------------------------------------------------------------
+static at::Tensor& unary_b_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
+	auto iter = at::TensorIteratorConfig()
+    	.check_all_same_dtype(false)
+    	.add_output(out)
+    	.add_input(self)
+    	.build();
+	auto& A = iter.tensor(0);
+	auto& B = iter.tensor(1);
+	auto A_ = py2veda(A), B_ = py2veda(B);
+	CVEDA(veda_tensors_unary_b(handle(A), &A_, &B_, op));
+	return out;
+}
+
+//------------------------------------------------------------------------------
+template<VEDATensors_unary_op OP>
+static at::Tensor unary_b(const at::Tensor& self) {
+	auto out = empty_as(self, c10::ScalarType::Bool);
+	return unary_b_kernel(out, self, OP);
+}
+
+//------------------------------------------------------------------------------
+template<VEDATensors_unary_op OP>
+static at::Tensor& unary_b_out(const at::Tensor& self, at::Tensor& out) {
+	out = toType(out, c10::ScalarType::Bool);
+	return unary_b_kernel(out, self, OP);
+}
+
+//------------------------------------------------------------------------------
+// T
+//------------------------------------------------------------------------------
 static at::Tensor& unary_t_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
 	auto iter = at::TensorIterator::unary_op(out, self);
 	auto& A = iter.tensor(0);
@@ -334,6 +364,8 @@ TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
 	m.impl("sqrt.out",				TORCH_FN(unary_t_out	<VEDA_TENSORS_UNARY_SQRT>));
 	m.impl("log1p",					TORCH_FN(unary_t		<VEDA_TENSORS_UNARY_LOG1P>));
 	m.impl("log1p.out",				TORCH_FN(unary_t_out	<VEDA_TENSORS_UNARY_LOG1P>));
+	m.impl("logical_not",			TORCH_FN(unary_b		<VEDA_TENSORS_UNARY_NOT>));
+	m.impl("logical_not.out",		TORCH_FN(unary_b_out	<VEDA_TENSORS_UNARY_NOT>));
 
 	m.impl("clamp",					TORCH_FN(clamp_tss));
 	m.impl("clamp_",				TORCH_FN(clamp_tss_));

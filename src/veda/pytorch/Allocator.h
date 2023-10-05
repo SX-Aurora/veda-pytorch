@@ -12,6 +12,7 @@ at::Scalar				toPyScalar				(const c10::ScalarType& type, const VEDATensors_scal
 at::Tensor				empty					(at::IntArrayRef size, c10::optional<c10::ScalarType> dtype, c10::optional<c10::Layout> layout, c10::optional<c10::Device> device, c10::optional<bool> pin_memory, const c10::optional<c10::MemoryFormat> memory_format);
 at::Tensor				sameDevice				(const at::Tensor& self, at::Tensor other);
 at::Tensor				sameType				(const at::Tensor& self, at::Tensor other);
+at::Tensor				toType					(at::Tensor tensor, const c10::ScalarType dtype);
 bool					isBool					(const at::Tensor& self);
 bool					isBool					(const c10::TensorImpl* self);
 c10::TensorImpl*		resizePyTensor			(c10::TensorImpl* self, at::IntArrayRef size, c10::optional<at::IntArrayRef> stride);

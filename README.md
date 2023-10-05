@@ -6,13 +6,18 @@ VEDA PyTorch is a library to add device support for the NEC SX-Aurora TSUBASA in
 [![PyPI](https://img.shields.io/pypi/v/veda-pytorch)](https://pypi.org/project/veda-pytorch)
 [![License](https://img.shields.io/pypi/l/veda-pytorch)](https://pypi.org/project/veda-pytorch)
 ![Python Versions](https://img.shields.io/pypi/pyversions/veda-pytorch)
-![Linux](https://svgshare.com/i/Zhy.svg)
 ![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 ![Maintenance](https://img.shields.io/pypi/dm/veda-pytorch)
 
 ## Release Notes
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
+
+<tr><td>v8</td><td>
+<ul>
+	<li>Added <code>torch.logical_not</code></li>
+</ul>
+</td></tr>
 
 <tr><td>v7</td><td>
 <ul>
