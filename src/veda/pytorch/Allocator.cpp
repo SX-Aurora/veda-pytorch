@@ -238,7 +238,12 @@ c10::TensorImpl* resizePyTensor(c10::TensorImpl* self, at::IntArrayRef size, c10
 //------------------------------------------------------------------------------
 at::Allocator* allocator(void) {
 	class VEAllocator final : public at::Allocator {
-		virtual at::DataPtr allocate(size_t nbytes) const override {
+		virtual at::DataPtr allocate(size_t nbytes)
+		#if TORCH_VERSION_MAJOR >= 2 && TORCH_VERSION_MINOR >= 3
+		#else
+			const
+		#endif
+		override {
 			VEDAdevice device;
 			CVEDA(vedaCtxGetDevice(&device));
 
@@ -251,6 +256,12 @@ at::Allocator* allocator(void) {
 		virtual at::DeleterFnPtr raw_deleter(void) const override {
 			return &veFree;
 		}
+
+		#if TORCH_VERSION_MAJOR >= 2 && TORCH_VERSION_MINOR >= 3
+		virtual void copy_data(void* dest, const void* src, std::size_t count) const override {
+			CVEDA(vedaMemcpyDtoDAsync((VEDAdeviceptr)dest, (VEDAdeviceptr)src, count, 0));
+		}
+		#endif
 	};
 	static VEAllocator s_allocator;
 	return &s_allocator;
