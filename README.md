@@ -14,7 +14,13 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
-<tr><td>v9</td><td>
+<tr><td>v11</td><td>
+<ul>
+	<li>Fixed shutdown problem in mixed GPU/VE use cases.</li>
+</ul>
+</td></tr>
+
+<tr><td>v10</td><td>
 <ul>
 	<li>Support for PyTorch v2.3.1</li>
 	<li>Support for SX-Aurora VE3</li>

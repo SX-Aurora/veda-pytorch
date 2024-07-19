@@ -37,7 +37,10 @@ public:
 };
 
 //------------------------------------------------------------------------------
-struct VEGuardImpl final : public c10::impl::DeviceGuardImplInterface {
+class VEGuardImpl final : public c10::impl::DeviceGuardImplInterface {
+	int m_deviceCnt;
+	
+public:
 								VEGuardImpl			(void);
 	virtual	c10::Device			exchangeDevice		(c10::Device d) const override;
 	virtual	c10::Device			getDevice			(void) const override;

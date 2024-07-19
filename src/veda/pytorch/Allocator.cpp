@@ -244,13 +244,12 @@ at::Allocator* allocator(void) {
 			const
 		#endif
 		override {
-			VEDAdevice device;
-			CVEDA(vedaCtxGetDevice(&device));
-
+			auto device = getGuardImpl()->getDevice();
+			GUARD(device);
 			VEDAdeviceptr ptr = 0;
 			if(nbytes)
 				CVEDA(vedaMemAllocAsync(&ptr, nbytes, 0));
-			return {ptr, ptr, &veFree, {DEVICE_TYPE, (c10::DeviceIndex)device}};
+			return {ptr, ptr, &veFree, device};
 		};
 
 		virtual at::DeleterFnPtr raw_deleter(void) const override {
