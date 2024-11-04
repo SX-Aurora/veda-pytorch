@@ -1,4 +1,4 @@
-__all__ = []
+__all__ = ['autoload']
 
 import ctypes
 import os
@@ -33,6 +33,9 @@ libveda.vedaDevicePrimaryCtxGetState.argtypes	= [ctypes.c_int, ctypes.c_void_p, 
 libveda.vedaDevicePrimaryCtxGetState.restype	= ctypes.c_int
 libveda.vedaMemGetInfo.argtypes					= [ctypes.c_void_p, ctypes.c_void_p]
 libveda.vedaMemGetInfo.restype					= ctypes.c_int
+
+def autoload(): # nothing special to do
+	pass
 
 def is_available():
 	return True

@@ -14,6 +14,12 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
+<tr><td>v12</td><td>
+<ul>
+	<li>Added auto plugin loading for Pytorch. <code>import veda.pytorch</code> is no longer required with PyTorch >=2.5!</li>
+</ul>
+</td></tr>
+
 <tr><td>v11</td><td>
 <ul>
 	<li>Fixed shutdown problem in mixed GPU/VE use cases.</li>

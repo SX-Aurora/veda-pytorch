@@ -27,5 +27,8 @@
 		"tungl (>= @Tungl_VERSION@, < @Tungl_VERSION_NEXT_MINOR@)",
 		"veda-tensors (>= @VEDATensors_VERSION@, < @VEDATensors_VERSION_NEXT_MINOR@)",
 		"torch==@PYTORCH_VERSION@"
-	]
+	],
+	"entry-points": {
+		"torch.backends": "veda_pytorch = veda.pytorch:autoload"
+	}
 }
