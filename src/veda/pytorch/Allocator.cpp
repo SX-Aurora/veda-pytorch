@@ -124,9 +124,7 @@ size_t numel(const at::Tensor& self) {
 			if(it == 0) {
 				isAnyZero = true;
 			} else if(isAnyZero) {
-				std::ostringstream msg;
-				msg << "Detected zero/non-zero mixed stride: " << self.strides();
-				THROW(msg.str().c_str());
+				STHROW("Detected zero/non-zero mixed stride: " << self.strides());
 			}
 		}
 		return isAnyZero;
@@ -310,9 +308,7 @@ VEDATensors_tensor py2veda(const at::Tensor& self) {
 				if(strides[i] == 0) {
 					allZero = true;
 				} else if(allZero) {
-					std::ostringstream ss;
-					ss << "VEDATensors does not support mixed-zero strides but found: " << strides;
-					THROW(ss.str().c_str());
+					STHROW("VEDATensors does not support mixed-zero strides but found: " << strides);
 				}
 			}
 		}
@@ -323,6 +319,20 @@ VEDATensors_tensor py2veda(const at::Tensor& self) {
 	}
 
 	return {sizes.size(), sizes, dtype(self), ptr(self)};
+}
+
+//------------------------------------------------------------------------------
+void sync(const int idx) {
+	GUARD(idx);
+	CVEDA(vedaCtxSynchronize());
+}
+
+//------------------------------------------------------------------------------
+int64_t memoryAllocated(const int idx) {
+	GUARD(idx);
+	size_t free = 0, total = 0;
+	CVEDA(vedaMemGetInfo(&free, &total));
+	return total - free;
 }
 
 //------------------------------------------------------------------------------

@@ -8,75 +8,52 @@ import torch # make sure pytorch was loaded before
 if not "@PYTORCH_VERSION@" in torch.__version__:
 	raise Exception(f"The NEC SX-Aurora TSUBASA can only be used with PyTorch v@PYTORCH_VERSION@ but you are using {torch.__version__}")
 
-cwd				= os.path.dirname(__file__)
-libvedapytorch	= ctypes.cdll.LoadLibrary(os.path.join(cwd, 'lib64/libveda-pytorch.so'))
-libveda			= ctypes.cdll.LoadLibrary(os.path.join(cwd, '../lib64/libveda.so.@VEDA_VERSION_MAJOR@'))
-
-libvedapytorch.veda_pytorch_get_current_device.argtypes	= []
-libvedapytorch.veda_pytorch_get_current_device.restype	= ctypes.c_int
-
-libveda.vedaCtxGetDevice.argtypes				= [ctypes.c_void_p]
-libveda.vedaCtxGetDevice.restype				= ctypes.c_int
-libveda.vedaCtxPushCurrent.argtypes				= [ctypes.c_void_p]
-libveda.vedaCtxPushCurrent.restype				= ctypes.c_int
-libveda.vedaCtxSetCurrent.argtypes				= [ctypes.c_void_p]
-libveda.vedaCtxSetCurrent.restype				= ctypes.c_int
-libveda.vedaCtxPopCurrent.argtypes				= [ctypes.c_void_p]
-libveda.vedaCtxPopCurrent.restype				= ctypes.c_int
-libveda.vedaDevicePrimaryCtxRetain.argtypes		= [ctypes.c_void_p, ctypes.c_int]
-libveda.vedaDevicePrimaryCtxRetain.restype		= ctypes.c_int
-libveda.vedaCtxSynchronize.argtypes				= []
-libveda.vedaCtxSynchronize.restype				= ctypes.c_int
-libveda.vedaDeviceGetCount.argtypes				= [ctypes.c_void_p]
-libveda.vedaDeviceGetCount.restype				= ctypes.c_int
-libveda.vedaDevicePrimaryCtxGetState.argtypes	= [ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p]
-libveda.vedaDevicePrimaryCtxGetState.restype	= ctypes.c_int
-libveda.vedaMemGetInfo.argtypes					= [ctypes.c_void_p, ctypes.c_void_p]
-libveda.vedaMemGetInfo.restype					= ctypes.c_int
+lib	= ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), 'lib64/libveda-pytorch.so'))
+lib.veda_pytorch_get_current_device.argtypes	= []
+lib.veda_pytorch_get_current_device.restype		= ctypes.c_int
+lib.veda_pytorch_device_count.argtypes			= []
+lib.veda_pytorch_device_count.restype			= ctypes.c_int
+lib.veda_pytorch_set_device.argtypes			= [ctypes.c_int]
+lib.veda_pytorch_set_device.restype				= None
+lib.veda_pytorch_memory_allocated.argtypes		= [ctypes.c_int]
+lib.veda_pytorch_memory_allocated.restype		= ctypes.c_long
+lib.veda_pytorch_sync.argtypes					= [ctypes.c_int]
+lib.veda_pytorch_sync.restype					= None
 
 def autoload(): # nothing special to do
 	pass
 
-def is_available():
-	return True
+def get_device_idx(device):
+	if device is None:
+		return lib.veda_pytorch_get_current_device()
+	
+	if isinstance(device, str):
+		device = torch.device(device)
+
+	if isinstance(device, torch.device):
+		assert device.type == 've', f"Expected device to be 've' but is '{device}'"
+		device = device.index
+	
+	if isinstance(device, int):
+		assert device >= 0 and device < device_count(), f"Expected device index to be >= 0 and < {device_count()} but is {device}"
+		return device
+	
+	raise Exception(f"Invalid type, expected None, str, torch.device or int but is {type(device)}")
 
 def current_device():
-	device = ctypes.c_int()
-	libveda.vedaCtxGetDevice(ctypes.byref(device))
-	return device.value
+	return torch.device(f've:{get_device_idx(None)}')
 
-def push_device(idx):
-	ctx = ctypes.c_void_p()
-	libveda.vedaDevicePrimaryCtxRetain(ctypes.byref(ctx), idx)
-	libveda.vedaCtxPushCurrent(ctx)
-
-def pop_device():
-	ctx = ctypes.c_void_p()
-	libveda.vedaCtxPopCurrent(ctypes.byref(ctx))
-
-def set_device(idx):
-	ctx = ctypes.c_void_p()
-	libveda.vedaDevicePrimaryCtxRetain(ctypes.byref(ctx), idx)
-	libveda.vedaCtxPushCurrent(ctx)
-	libveda.vedaCtxSetCurrent(ctypes.byref(ctx))
+def set_device(device):
+	lib.veda_pytorch_set_device(get_device_idx(device))
 
 def device_count():
-	cnt = ctypes.c_int()
-	libveda.vedaDeviceGetCount(ctypes.byref(cnt))
-	return cnt.value
+	return int(lib.veda_pytorch_device_count())
 
-def get_device_idx(device):
-	if device is None:						return libvedapytorch.veda_pytorch_get_current_device()
-	elif isinstance(device, torch.device):	return device.index
-	elif isinstance(device, int):			return device
-	raise Exception("Invalid type, expected None, torch.device or int but is {}".format(type(device)))
+def is_available():
+	return device_count() > 0
 
 def memory_allocated(device=None):
-	device, total, free	= get_device_idx(device), ctypes.c_long(), ctypes.c_long()
-	push_device(device)
-	libveda.vedaMemGetInfo(ctypes.byref(free), ctypes.byref(total))
-	pop_device()
-	return total.value - free.value
+	return int(lib.veda_pytorch_memory_allocated(get_device_idx(device)))
 
 def to_ve(self, device=None, non_blocking=False, memory_format=torch.preserve_format):
 	assert device == None or isinstance(device, int)
@@ -98,32 +75,23 @@ class Device:
 	def __enter__(self):
 		assert isinstance(self.m_device, int)
 		self.m_previous = current_device()
-		push_device(self.m_device)
+		set_device(self.m_device)
 		return self
 
 	def __exit__(self, type, value, traceback):
-		assert isinstance(self.m_previous, int)
-		pop_device()
+		assert isinstance(self.m_previous, torch.device)
+		set_device(self.m_previous)
 		
 class DeviceOf(Device):
 	def __init__(self, tensor):
 		super().__init__(tensor.device)
 
 def synchronize(device=None):
-	flags	= ctypes.c_int()
-	active	= ctypes.c_int()
-
-	def sync(device):
-		libveda.vedaDevicePrimaryCtxGetState(device, ctypes.byref(flags), ctypes.byref(active))
-		if active.value:
-			with Device(device):
-				libveda.vedaCtxSynchronize()
-
 	if device is None:
 		for i in range(device_count()):
-			sync(i)
+			lib.veda_pytorch_sync(i)
 	else:
-		sync(get_device_idx(device))
+		lib.veda_pytorch_sync(get_device_idx(device))
 
 torch.ve = collections.namedtuple('VE',
 	[

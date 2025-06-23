@@ -55,31 +55,39 @@ static at::Tensor& copy_(at::Tensor& dst_tensor, const at::Tensor& src_tensor, b
 		THROWIF(dst_bytes < bytes, "Dst Tensor is too small. Expected %llu but is %llu", (size_t)bytes, (size_t)dst_bytes);
 		THROWIF(src_bytes < bytes, "Src Tensor is too small. Expected %llu but is %llu", (size_t)bytes, (size_t)src_bytes);
 
+		auto check = [&](const VEDAresult res, const int line) {
+			if(res != VEDA_SUCCESS) {
+				const char* err;
+				vedaGetErrorName(res, &err);
+				STHROWAT(__FILE__, line, "Unable to copy " << bytes << "B (" << dst_tensor.dtype() << ") from " << src << " (" << src_device << ") to " << dst << " (" << dst_device << ")! Caused by: " << err);
+			}
+		};
+
 		if(bytes) {
 			// Copy Host to VE -------------------------------------------------
 			if(src_type == at::DeviceType::CPU && dst_type == DEVICE_TYPE) {
-				CVEDA(vedaMemcpyHtoDAsync((VEDAdeviceptr)dst, src, bytes, 0));
+				check(vedaMemcpyHtoDAsync((VEDAdeviceptr)dst, src, bytes, 0), __LINE__);
 				if(!non_blocking)
-					CVEDA(vedaStreamSynchronize(0));
+					check(vedaStreamSynchronize(0), __LINE__);
 			}
 
 			// Copy VE to Host -------------------------------------------------
 			else if(src_type == DEVICE_TYPE && dst_type == at::DeviceType::CPU) {
-				CVEDA(vedaMemcpyDtoHAsync(dst, (VEDAdeviceptr)src, bytes, 0));
+				check(vedaMemcpyDtoHAsync(dst, (VEDAdeviceptr)src, bytes, 0), __LINE__);
 				if(!non_blocking)
-					CVEDA(vedaStreamSynchronize(0));
+					check(vedaStreamSynchronize(0), __LINE__);
 			}
 
 			// Copy VE to VE ---------------------------------------------------
 			else if(dst_device == src_device) {
-				CVEDA(vedaMemcpyDtoDAsync((VEDAdeviceptr)dst, (VEDAdeviceptr)src, bytes, 0));
+				check(vedaMemcpyDtoDAsync((VEDAdeviceptr)dst, (VEDAdeviceptr)src, bytes, 0), __LINE__);
 				if(!non_blocking)
-					CVEDA(vedaStreamSynchronize(0));
+					check(vedaStreamSynchronize(0), __LINE__);
 			}
 
 			// Unsupported ----------------------------------------------------
 			else {
-				FAIL();
+				check(VEDA_ERROR_NOT_IMPLEMENTED, __LINE__);
 			}
 		}
 	}

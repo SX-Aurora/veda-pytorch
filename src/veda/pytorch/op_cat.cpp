@@ -10,7 +10,6 @@ static at::Tensor& cat(const at::ITensorListRef& tensors, int64_t dim, at::Tenso
 #elif TORCH_VERSION_ >= 11200
 static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
 #endif
-	// TODO: checks that all dims match up!
 	assert(tensors.size() > 0);
 	if(tensors.size() == 1)
 		return out;
@@ -37,10 +36,10 @@ static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
 	// Call VE -----------------------------------------------------------------
 	std::vector<VEDATensors_tensor> inputs;
 	inputs.reserve(tensors.size());
-	
+
 	for(auto& t : tensors)
 		inputs.emplace_back(py2veda(t));
-
+	
 	auto output_ = py2veda(out);
 	CVEDA(veda_tensors_cat(handle(out), (int)inputs.size(), inputs.data(), &output_, (int)dim));
 

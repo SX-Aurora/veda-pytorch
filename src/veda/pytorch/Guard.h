@@ -1,47 +1,17 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
-#define GUARD(T) const VEGuard __guard__(T)
-
-//------------------------------------------------------------------------------
-class VEGuard final {
-	const c10::Device	m_device;
-
-	inline void init(void) const {
-		ASSERT(m_device.type() == DEVICE_TYPE);
-		auto idx = m_device.index();
-		VEDAcontext ctx;
-		if(idx >= 0) {
-			CVEDA(vedaDevicePrimaryCtxRetain(&ctx, m_device.index()));
-		} else if(idx == -1) {
-			if(vedaCtxGetCurrent(&ctx) != VEDA_SUCCESS)
-				CVEDA(vedaDevicePrimaryCtxRetain(&ctx, 0));
-		} else {
-			THROW("Illegal device index: %i", idx);
-		}
-		CVEDA(vedaCtxPushCurrent(ctx));
-	}
-
-public:
-	inline VEGuard(const c10::Device device)			: m_device(device)					{	init();	}
-	inline VEGuard(const at::Tensor& self)				: m_device(self.device())			{	init();	}
-	inline VEGuard(const at::TensorList& list)			: m_device(list.front().device())	{	init();	}
-	inline VEGuard(const at::ITensorListRef& list)		: m_device(list.front().device())	{	init();	}
-	inline VEGuard(const at::TensorOptions& options)	: m_device(options.device())		{	init();	}
-	inline VEGuard(const c10::DeviceIndex device)		: m_device({DEVICE_TYPE, device})	{	init();	}
-	inline VEGuard(const c10::TensorImpl* self)			: m_device(self->device())			{	init();	}
-	
-	inline ~VEGuard(void) {
-		VEDAcontext ctx;
-		CVEDA(vedaCtxPopCurrent(&ctx));
-	}
-};
-
-//------------------------------------------------------------------------------
 class VEGuardImpl final : public c10::impl::DeviceGuardImplInterface {
-	int m_deviceCnt;
-	
+	std::mutex					m_mutex;
+	std::map<int, VEDAcontext>	m_ctxs;
+	int							m_deviceCnt;
+	bool						m_exitVEDA;
+
+			VEDAcontext			getCTX				(int idx);
 public:
 								VEGuardImpl			(void);
+								~VEGuardImpl		(void);
+			void				pop					(void) const;
+			void				push				(const int idx);
 	virtual	c10::Device			exchangeDevice		(c10::Device d) const override;
 	virtual	c10::Device			getDevice			(void) const override;
 	virtual	c10::DeviceIndex	deviceCount			(void) const noexcept override;
@@ -53,7 +23,34 @@ public:
 };
 
 //------------------------------------------------------------------------------
-const VEGuardImpl* getGuardImpl(void);
+VEGuardImpl* getGuardImpl(void);
+
+//------------------------------------------------------------------------------
+#define GUARD(T) const VEGuard __guard__(T)
+
+//------------------------------------------------------------------------------
+class VEGuard final {
+	const c10::Device m_device;
+	const c10::Device m_prevDevice;
+
+	inline void init(void) const {
+		ASSERT(m_device.type() == DEVICE_TYPE);
+		getGuardImpl()->push(m_device.index());
+	}
+
+public:
+	inline VEGuard(const c10::Device device)			: m_device(device),					m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const at::Tensor& self)				: m_device(self.device()),			m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const at::TensorList& list)			: m_device(list.front().device()),	m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const at::ITensorListRef& list)		: m_device(list.front().device()),	m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const at::TensorOptions& options)	: m_device(options.device()),		m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const c10::DeviceIndex device)		: m_device({DEVICE_TYPE, device}),	m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	inline VEGuard(const c10::TensorImpl* self)			: m_device(self->device()),			m_prevDevice(getGuardImpl()->exchangeDevice(m_device))	{ init(); }
+	
+	inline ~VEGuard(void) {
+		getGuardImpl()->pop();
+	}
+};
 
 //------------------------------------------------------------------------------
 #include "__ns.h"

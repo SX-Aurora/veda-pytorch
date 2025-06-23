@@ -39,6 +39,14 @@
 	THROWAT(L_MODULE, e.file().data(), e.line(), "VEDA_ERROR: %s", e.what().data());\
 }
 
+#define STHROWAT(FILE, LINE, ...) {				\
+	std::ostringstream g;						\
+	g << __VA_ARGS__;							\
+	const auto msg = g.str();					\
+	THROWAT(L_MODULE, FILE, LINE, msg.c_str());	\
+}
+#define STHROW(...) STHROWAT(__FILE__, __LINE__, __VA_ARGS__)
+
 #include "__ns.h"
 inline void check(VEDAresult res, const char* file, const int line) {
 	if(__builtin_expect((res != VEDA_SUCCESS), 0)) {

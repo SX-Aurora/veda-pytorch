@@ -14,6 +14,15 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
+<tr><td>v13</td><td>
+<ul>
+	<li>Fixed <code>torch.ve.set_device</code></li>
+	<li>Fixed allocation on wrong VE in multi-process execution</li>
+	<li>Improved error messages</li>
+	<li>Upgraded build script for PyTorch >=2.7!</li>
+</ul>
+</td></tr>
+
 <tr><td>v12</td><td>
 <ul>
 	<li>Added auto plugin loading for Pytorch. <code>import veda.pytorch</code> is no longer required with PyTorch >=2.5!</li>
