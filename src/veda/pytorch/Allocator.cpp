@@ -153,7 +153,7 @@ VEDATensors_dtype dtype(const at::Tensor& self) {
 		case c10::ScalarType::ComplexDouble:	return VEDA_TENSORS_DTYPE_F64_F64;
 	}
 	
-	THROW("Unknown PyTorch c10::ScalarType"); // TODO: << self.scalar_type());
+	STHROW("Unknown PyTorch c10::ScalarType: " << self.scalar_type());
 }
 
 //------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ VEDATensors_dtype dtype(const c10::TensorImpl* self) {
 	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<float>>())	return VEDA_TENSORS_DTYPE_F32_F32;
 	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<double>>())	return VEDA_TENSORS_DTYPE_F64_F64;
 	
-	THROW("Unknown PyTorch caffee2::TypeMeta"); // TODO: << self->dtype());
+	STHROW("Unknown PyTorch caffee2::TypeMeta: " << self->dtype());
 }
 
 //------------------------------------------------------------------------------
@@ -318,21 +318,8 @@ VEDATensors_tensor py2veda(const at::Tensor& self) {
 		return {0, (size_t*)0, dtype(self), ptr(self)};
 	}
 
+	ASSERT(self.is_contiguous());
 	return {sizes.size(), sizes, dtype(self), ptr(self)};
-}
-
-//------------------------------------------------------------------------------
-void sync(const int idx) {
-	GUARD(idx);
-	CVEDA(vedaCtxSynchronize());
-}
-
-//------------------------------------------------------------------------------
-int64_t memoryAllocated(const int idx) {
-	GUARD(idx);
-	size_t free = 0, total = 0;
-	CVEDA(vedaMemGetInfo(&free, &total));
-	return total - free;
 }
 
 //------------------------------------------------------------------------------

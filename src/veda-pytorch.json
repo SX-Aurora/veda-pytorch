@@ -1,6 +1,6 @@
 {
 	"name":				"veda-pytorch",
-	"version":			"@PYTORCH_VERSION@.post@VEDAPytorch_VERSION@",
+	"version":			"@VEDAPytorch_VERSION@",
 	"platform":			"linux_x86_x64",
 	"summary":			"VEDA PyTorch",
 	"readme":			"veda/pytorch/README.md",
@@ -20,13 +20,16 @@
 		"veda/pytorch"
 	],
 	"payload": [
-		"veda/pytorch/lib64/libveda-pytorch.so"
+		"veda/pytorch/csrc/veda/pytorch/*",
+		"veda/pytorch/csrc/veda/pytorch/c10d/*"
 	],
 	"requires-dist": [
-		"veda (>= @VEDA_VERSION@, < @VEDA_VERSION_NEXT_MAJOR@)",
-		"tungl (>= @Tungl_VERSION@, < @Tungl_VERSION_NEXT_MINOR@)",
-		"veda-tensors (>= @VEDATensors_VERSION@, < @VEDATensors_VERSION_NEXT_MINOR@)",
-		"torch==@PYTORCH_VERSION@"
+		"veda (>= 2.3.0, < 3)",
+		"tungl (>= 0.1.5, < 1)",
+		"veda-tensors (>= 0.1.9, < 2)",
+		"torch",
+		"ninja",
+		"packaging"
 	],
 	"entry-points": {
 		"torch.backends": "veda_pytorch = veda.pytorch:autoload"

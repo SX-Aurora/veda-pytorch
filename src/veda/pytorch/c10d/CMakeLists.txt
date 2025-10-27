@@ -1,0 +1,6 @@
+INSTALL(FILES
+	${CMAKE_CURRENT_LIST_DIR}/ProcessGroupVEDA.cpp
+	${CMAKE_CURRENT_LIST_DIR}/ProcessGroupVEDA.h
+	${CMAKE_CURRENT_LIST_DIR}/c10d_registry.cpp
+	${CMAKE_CURRENT_LIST_DIR}/veda_registry.cpp
+DESTINATION ${VEDAPytorch_INSTALL_PATH}/csrc/veda/pytorch/c10d)

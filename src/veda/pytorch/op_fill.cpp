@@ -6,12 +6,14 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static at::Tensor& zero_(at::Tensor& self) {
+	dprint("zero_", self);
 	CVEDA(vedaMemsetD8Async(ptr(self), 0, self.nbytes(), 0));
 	return self;
 }
 
 //------------------------------------------------------------------------------
 static at::Tensor& fill_(at::Tensor& self, const at::Scalar& value) {
+	dprint("fill_", self, value);
 	auto s = scalar(self.scalar_type(), value);
 	auto self_ = py2veda(self);
 	CVEDA(veda_tensors_fill(handle(self), &self_, s));

@@ -6,6 +6,7 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static at::Tensor& softmax_impl(const at::Tensor& in, const int64_t dim, const bool half_to_float, at::Tensor& out, const VEDATensors_softmax_op op) {
+	dprint("softmax_impl", in, dim, half_to_float, out);
 	auto o = py2veda(out), x = py2veda(in);
 	CVEDA(veda_tensors_softmax(handle(out), &o, &x, dim, op));
 	return out;

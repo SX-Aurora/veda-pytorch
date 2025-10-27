@@ -4,6 +4,8 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static at::Tensor select(const at::Tensor& self, int64_t dim, int64_t index) {
+	dprint("select", self, dim, index);
+
 	auto ndim = self.dim();
 	dim = at::maybe_wrap_dim(dim, ndim);
 
@@ -16,7 +18,7 @@ static at::Tensor select(const at::Tensor& self, int64_t dim, int64_t index) {
 	for(int64_t i = dim;   i < ndim; i++)	ostride	*= sizes[i];
 	for(int64_t i = dim+1; i < ndim; i++)	icnt	*= sizes[i];
 
-	size_t offset	= index * icnt;
+	size_t offset = index * icnt;
 
 	sizes.erase(sizes.begin() + dim);
 	

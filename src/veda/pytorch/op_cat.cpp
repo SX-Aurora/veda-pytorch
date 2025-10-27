@@ -10,9 +10,12 @@ static at::Tensor& cat(const at::ITensorListRef& tensors, int64_t dim, at::Tenso
 #elif TORCH_VERSION_ >= 11200
 static at::Tensor& cat(at::TensorList tensors, int64_t dim, at::Tensor& out) {
 #endif
+	dprint("cat", out, tensors);
 	assert(tensors.size() > 0);
-	if(tensors.size() == 1)
+	if(tensors.size() == 1) {
+		out = tensors.front();
 		return out;
+	}
 
 	GUARD(tensors);
 

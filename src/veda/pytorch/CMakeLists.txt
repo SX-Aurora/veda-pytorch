@@ -1,6 +1,15 @@
-LIST(APPEND SRC
+INSTALL(FILES
+	${CMAKE_CURRENT_LIST_DIR}/__ns.h
 	${CMAKE_CURRENT_LIST_DIR}/Allocator.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Allocator.h
 	${CMAKE_CURRENT_LIST_DIR}/Guard.cpp
+	${CMAKE_CURRENT_LIST_DIR}/Guard.h
+	${CMAKE_CURRENT_LIST_DIR}/api.h
+	${CMAKE_CURRENT_LIST_DIR}/fallback.cpp
+	${CMAKE_CURRENT_LIST_DIR}/dprint.cpp
+	${CMAKE_CURRENT_LIST_DIR}/dprint.h
+	${CMAKE_CURRENT_LIST_DIR}/aten_registry.cpp
+	${CMAKE_CURRENT_LIST_DIR}/op_arange.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_binary.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_bitwise.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_cat.cpp
@@ -17,5 +26,4 @@ LIST(APPEND SRC
 	${CMAKE_CURRENT_LIST_DIR}/op_tensor.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_unary.cpp
 	${CMAKE_CURRENT_LIST_DIR}/op_where.cpp
-	${CMAKE_CURRENT_LIST_DIR}/export.cpp
-)
+DESTINATION ${VEDAPytorch_INSTALL_PATH}/csrc/veda/pytorch)

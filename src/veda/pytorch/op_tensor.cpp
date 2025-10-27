@@ -21,6 +21,7 @@ namespace at {
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static at::Tensor clone(const at::Tensor& self, c10::optional<c10::MemoryFormat> optional_memory_format) {
+	dprint("clone", self);
 	auto out = empty_as(self);
 	CVEDA(vedaMemcpyDtoDAsync(ptr(out), ptr(self), self.nbytes(), 0));
 	return out;
@@ -28,6 +29,7 @@ static at::Tensor clone(const at::Tensor& self, c10::optional<c10::MemoryFormat>
 
 //------------------------------------------------------------------------------
 static at::Scalar _local_scalar_dense(const at::Tensor& self) {
+	dprint("_local_scalar_dense", self);
 	GUARD(self);
 	VEDATensors_scalar value = {};
 	CVEDA(vedaMemcpyDtoH(&value, ptr(self), veda_tensors_dtype_bytes(dtype(self))));
@@ -36,8 +38,8 @@ static at::Scalar _local_scalar_dense(const at::Tensor& self) {
 
 //------------------------------------------------------------------------------
 static const at::Tensor& resize(const at::Tensor& self, at::IntArrayRef sizes, c10::optional<at::MemoryFormat> optional_memory_format) {
+	dprint("resize", self, sizes);
 	GUARD(self);
-	// TODO: L_TRACE(renderDevice(deviceHandle()) << "resize(" << (void*)ptr(self) << ", " << sizes << ")");
 	resizePyTensor(self.unsafeGetTensorImpl(), sizes, {});
 	if(optional_memory_format.has_value()) {
 		auto memory_format = optional_memory_format.value();

@@ -7,7 +7,8 @@
 //------------------------------------------------------------------------------
 inline void kernel(at::TensorIterator& iter, const VEDATensors_bitwise_op op) {
 	ASSERT(iter.ntensors() == 3);
-	auto A = iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
+	auto &A = iter.tensor(0), &B = iter.tensor(1), &C = iter.tensor(2);
+	dprint("bitwise", A, B, C, op);
 	auto A_ = py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
 	CVEDA(veda_tensors_bitwise(handle(A), &A_, &B_, &C_, op));
 }

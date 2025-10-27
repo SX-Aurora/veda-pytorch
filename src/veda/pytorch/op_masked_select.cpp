@@ -6,6 +6,7 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static at::Tensor& masked_select_out_out(const at::Tensor& self, const at::Tensor& mask, at::Tensor& out) {
+	dprint("masked_select_out_out", self, mask, out);
 	auto hnd		= handle(self);
 	size_t numel	= 0;
 	auto mask_		= py2veda(mask);

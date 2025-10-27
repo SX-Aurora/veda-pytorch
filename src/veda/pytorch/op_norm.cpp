@@ -98,7 +98,7 @@ static void norm_kernel(at::TensorIterator& iter, at::Scalar p, at::IntArrayRef 
 	else if (p.isFloatingPoint())	val = 			p.to<float>		();
 	else THROW("norm_kernel_tensor_iterator_impl expects norm to be integer or float");
 
-	auto A = iter.tensor(0), B = iter.tensor(1);
+	auto &A = iter.tensor(0), &B = iter.tensor(1);
 	THROWIF(dtype(A) != dtype(B), "torch.norm only supports identical storage types");
 
 	VEDATensors_reduce_op op;

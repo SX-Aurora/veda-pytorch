@@ -17,8 +17,6 @@ bool					isBool					(const at::Tensor& self);
 bool					isBool					(const c10::TensorImpl* self);
 c10::TensorImpl*		resizePyTensor			(c10::TensorImpl* self, at::IntArrayRef size, c10::optional<at::IntArrayRef> stride);
 size_t					numel					(const at::Tensor& self);
-void					sync					(const int idx);
-int64_t					memoryAllocated			(const int idx);
 
 //------------------------------------------------------------------------------
 inline at::Tensor empty_as(at::IntArrayRef sizes, const at::Tensor& self, const c10::ScalarType& dtype) {

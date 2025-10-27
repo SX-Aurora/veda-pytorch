@@ -2,16 +2,16 @@
 
 #include "__ns.h"
 //------------------------------------------------------------------------------
-// T
+// B
 //------------------------------------------------------------------------------
 static at::Tensor& unary_b_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
+	dprint("unary_b_kernel", out, self);
 	auto iter = at::TensorIteratorConfig()
     	.check_all_same_dtype(false)
     	.add_output(out)
     	.add_input(self)
     	.build();
-	auto& A = iter.tensor(0);
-	auto& B = iter.tensor(1);
+	auto &A = iter.tensor(0), &B = iter.tensor(1);
 	auto A_ = py2veda(A), B_ = py2veda(B);
 	CVEDA(veda_tensors_unary_b(handle(A), &A_, &B_, op));
 	return out;
@@ -35,6 +35,7 @@ static at::Tensor& unary_b_out(const at::Tensor& self, at::Tensor& out) {
 // T
 //------------------------------------------------------------------------------
 static at::Tensor& unary_t_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
+	dprint("unary_t_kernel", out, self);
 	auto iter = at::TensorIterator::unary_op(out, self);
 	auto& A = iter.tensor(0);
 	auto& B = iter.tensor(1);
@@ -60,6 +61,7 @@ static at::Tensor& unary_t_out(const at::Tensor& self, at::Tensor& out) {
 // C
 //------------------------------------------------------------------------------
 static at::Tensor& unary_c_kernel(at::Tensor& out, const at::Tensor& self, const VEDATensors_unary_op op) {
+	dprint("unary_c_kernel", out, self);
 	if(self.is_complex()) {
 		at::TensorIterator iter;
 		iter.build(
@@ -95,8 +97,9 @@ static at::Tensor unary_c(const at::Tensor& self) {
 // TT
 //------------------------------------------------------------------------------
 static at::Tensor& unary_tt_kernel(at::Tensor& out, const at::Tensor& self, const at::Tensor& other, const VEDATensors_unary_op op) {
+	dprint("unary_tt_kernel", out, self, other);
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, other)));
-	auto A = iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
+	auto &A = iter.tensor(0), &B = iter.tensor(1), &C = iter.tensor(2);
 	auto A_ = py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
 	CVEDA(veda_tensors_unary_tt(handle(A), &A_, &B_, &C_, op));
 	return out;
@@ -125,8 +128,9 @@ static at::Tensor& unary_tt_(at::Tensor& self, const at::Tensor& other) {
 // TS
 //------------------------------------------------------------------------------
 static at::Tensor& unary_ts_kernel(at::Tensor& out, const at::Tensor& self, const at::Scalar& other, const VEDATensors_unary_op op) {
+	dprint("unary_ts_kernel", out, self, other);
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, self)));
-	auto A = iter.tensor(0), B = iter.tensor(1);
+	auto &A = iter.tensor(0), &B = iter.tensor(1);
 	auto A_ = py2veda(A), B_ = py2veda(B);
 	CVEDA(veda_tensors_unary_ts(handle(A), &A_, &B_, scalar(out.scalar_type(), other), op));
 	return out;
@@ -155,9 +159,10 @@ static at::Tensor& unary_ts_(at::Tensor& self, const at::Scalar& other) {
 // TTS
 //------------------------------------------------------------------------------
 static at::Tensor& unary_tts_kernel(at::Tensor& out, const at::Tensor& self, const at::Tensor& other, const at::Scalar& alpha, const VEDATensors_unary_op op) {
+	dprint("unary_tts_kernel", out, self, other, alpha);
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, other)));
 	at::native::alpha_check(iter.dtype(), alpha);
-	auto A	= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2);
+	auto &A	= iter.tensor(0), &B = iter.tensor(1), &C = iter.tensor(2);
 	auto A_	= py2veda(A), B_ = py2veda(B), C_ = py2veda(C);
 	CVEDA(veda_tensors_unary_tts(handle(A), &A_, &B_, &C_, scalar(out.scalar_type(), alpha), op));
 	return out;
@@ -187,7 +192,7 @@ static at::Tensor& unary_tts_(at::Tensor& self, const at::Tensor& other, const a
 //------------------------------------------------------------------------------
 static at::Tensor& unary_tss_kernel(at::Tensor& out, const at::Tensor& self, const at::Scalar& alpha, const at::Scalar& beta, const VEDATensors_unary_op op) {
 	auto iter = at::TensorIterator::binary_op(out, self, sameType(out, sameDevice(out, self)));
-	auto A	= iter.tensor(0), B = iter.tensor(1);
+	auto &A	= iter.tensor(0), &B = iter.tensor(1);
 	auto A_	= py2veda(A), B_ = py2veda(B);
 	CVEDA(veda_tensors_unary_tss(handle(A), &A_, &B_, scalar(out.scalar_type(), alpha), scalar(out.scalar_type(), beta), op));
 	return out;
@@ -222,7 +227,7 @@ static at::Tensor& unary_ttt_kernel(at::Tensor& out, const at::Tensor& self, con
 		.add_input(tensor1)
 		.add_input(tensor2)
 		.build();
-	auto A	= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2), D = iter.tensor(4);
+	auto &A	= iter.tensor(0), &B = iter.tensor(1), &C = iter.tensor(2), &D = iter.tensor(3);
 	auto A_	= py2veda(A), B_ = py2veda(B), C_ = py2veda(C), D_ = py2veda(D);
 	CVEDA(veda_tensors_unary_ttt(handle(A), &A_, &B_, &C_, &D_, op));
 	return out;
@@ -257,7 +262,7 @@ static at::Tensor& unary_ttts_kernel(at::Tensor& result, const at::Tensor& self,
 		.add_input(tensor1)
 		.add_input(tensor2)
 		.build();
-	auto A	= iter.tensor(0), B = iter.tensor(1), C = iter.tensor(2), D = iter.tensor(3);
+	auto &A	= iter.tensor(0), &B = iter.tensor(1), &C = iter.tensor(2), &D = iter.tensor(3);
 	auto A_	= py2veda(A), B_ = py2veda(B), C_ = py2veda(C), D_ = py2veda(D);
 	CVEDA(veda_tensors_unary_ttts(handle(A), &A_, &B_, &C_, &D_, scalar(result.scalar_type(), value), op));
 	return result;

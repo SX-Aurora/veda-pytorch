@@ -14,6 +14,35 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
+<tr><td>v14</td><td>
+Starting with v14, VEDA PyTorch is no longer distributed as precompiled binary
+but gets compiled as PyTorch C++ extension on the target machine. So you don't
+need to install a matching binary package anymore!
+
+We further added a experimental implementation for using NEC MPI. You can create
+the process group as follows:
+
+<code>
+torch.distributed.init_process_group(
+    backend		= 'veda',
+    world_size	= os.environ['MPISIZE'],
+    rank		= os.environ['MPIRANK'],
+	store		= torch.distributed.Store()
+)
+</code>
+
+Further changes:
+<ul>
+	<li>Added support for PyTorch v2.9.0</li>
+	<li>Added <code>arange.start_out</code></li>
+	<li>Added function tracing. Activate using <code>TUNGL_LOG=TRACE</code></li>
+	<li>Bugfix for <code>aten::cat.out</code></li>
+	<li>Bugfix for <code>copy_</code></li>
+	<li>Bugfix for <code>torch.load(location='ve')</code></li>
+	<li>Removed unnecessary context sync</li>
+</ul>
+</td></tr>
+
 <tr><td>v13</td><td>
 <ul>
 	<li>Fixed <code>torch.ve.set_device</code></li>

@@ -1,10 +1,12 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 class VEGuardImpl final : public c10::impl::DeviceGuardImplInterface {
-	std::mutex					m_mutex;
-	std::map<int, VEDAcontext>	m_ctxs;
-	int							m_deviceCnt;
-	bool						m_exitVEDA;
+	
+			std::mutex					m_mutex;
+			std::map<int, VEDAcontext>	m_ctxs;
+			int							m_defaultIdx;
+	const	bool						m_exitVEDA;
+	const	int							m_deviceCnt;
 
 			VEDAcontext			getCTX				(int idx);
 public:
@@ -12,6 +14,8 @@ public:
 								~VEGuardImpl		(void);
 			void				pop					(void) const;
 			void				push				(const int idx);
+			void				syncAll				(void) const;
+			void				setDefaultIdx		(const int idx);
 	virtual	c10::Device			exchangeDevice		(c10::Device d) const override;
 	virtual	c10::Device			getDevice			(void) const override;
 	virtual	c10::DeviceIndex	deviceCount			(void) const noexcept override;
@@ -51,6 +55,14 @@ public:
 		getGuardImpl()->pop();
 	}
 };
+
+//------------------------------------------------------------------------------
+int64_t	deviceCount		(void);
+int64_t	getCurrentDevice(void);
+int64_t	memoryAllocated	(const int64_t idx);
+void	setDevice		(const int64_t idx);
+void	sync			(const int64_t idx);
+void	syncAll			(void);
 
 //------------------------------------------------------------------------------
 #include "__ns.h"

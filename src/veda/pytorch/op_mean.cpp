@@ -15,7 +15,7 @@ using IntArrayRef = at::IntArrayRef;
 template<VEDATensors_reduce_op OP>
 static inline void x_stub(at::TensorIterator& iter) {
 	ASSERT(iter.ntensors() == 2);
-	auto A = iter.tensor(0), B = iter.tensor(1);
+	auto &A = iter.tensor(0), &B = iter.tensor(1);
 	auto A_ = py2veda(A), B_ = py2veda(B);
 
 	if(A.numel() == 1) {
@@ -41,7 +41,7 @@ static void mean_stub(at::TensorIterator& iter) {
 
 //------------------------------------------------------------------------------
 static void sum_stub(at::TensorIterator& iter) {
-	auto A = iter.tensor(0), B = iter.tensor(1);
+	auto &A = iter.tensor(0), &B = iter.tensor(1);
 	if(A.numel() == B.numel()) {
 		CVEDA(vedaMemcpyDtoDAsync(ptr(A), ptr(B), A.nbytes(), 0));
 	} else {

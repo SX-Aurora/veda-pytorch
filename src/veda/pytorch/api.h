@@ -27,7 +27,7 @@
 #define DEVICE_TYPE_	VE
 #define DISPATCH_KEY	c10::DispatchKey::VE
 
-#define L_MODULE "VEDA-PYTORCH"
+#define L_MODULE "VEDA/PyTorch"
 #include <tungl/c.h>
 #include <veda/api.h>
 #include <veda/cpp/api.h>
@@ -48,6 +48,7 @@
 #define STHROW(...) STHROWAT(__FILE__, __LINE__, __VA_ARGS__)
 
 #include "__ns.h"
+//------------------------------------------------------------------------------
 inline void check(VEDAresult res, const char* file, const int line) {
 	if(__builtin_expect((res != VEDA_SUCCESS), 0)) {
 		const char* err;
@@ -55,9 +56,12 @@ inline void check(VEDAresult res, const char* file, const int line) {
 		THROWAT(L_MODULE, file, line, "VEDA_ERROR: %s", err);
 	}
 }
+
+//------------------------------------------------------------------------------
 #include "__ns.h"
 
 #define TORCH_VERSION_ ((TORCH_VERSION_MAJOR * 10000) + (TORCH_VERSION_MINOR * 100) + (TORCH_VERSION_PATCH))
 
 #include "Guard.h"
 #include "Allocator.h"
+#include "dprint.h"

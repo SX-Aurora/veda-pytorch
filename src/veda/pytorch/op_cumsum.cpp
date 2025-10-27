@@ -6,6 +6,7 @@
 #include "__ns.h"
 //------------------------------------------------------------------------------
 static void cumsum_kernel(at::Tensor& result, const at::Tensor& self, int64_t dim) {
+	dprint("cumsum_kernel", result, self, dim);
 	dim = at::maybe_wrap_dim(dim, self.dim());
 	auto result_ = py2veda(result), self_ = py2veda(self);
 	CVEDA(veda_tensors_prefix_sum(handle(result), &result_, 0, &self_, dim, 1)); // no carry and always inclusive
