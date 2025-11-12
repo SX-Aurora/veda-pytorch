@@ -14,6 +14,13 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
+<tr><td>v14.0.1</td><td>
+<ul>
+	<li>Increased c10d compatibility (tested on v2.5-2.9)</li>
+	<li>Added better error handling when running on systems with missing VEOS installation.</li>
+</ul>
+</td></tr>
+
 <tr><td>v14</td><td>
 Starting with v14, VEDA PyTorch is no longer distributed as precompiled binary
 but gets compiled as PyTorch C++ extension on the target machine. So you don't

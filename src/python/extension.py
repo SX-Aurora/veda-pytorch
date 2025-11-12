@@ -64,17 +64,8 @@ mpi_version = find_mpi()
 torch.utils.cpp_extension.load(
 	'veda_pytorch._C',
 	sources,
-	extra_cflags		= None,
-	extra_cuda_cflags	= None,
-	extra_sycl_cflags	= None,
 	extra_ldflags		= ldflags,
 	extra_include_paths	= include_directories,
-	build_directory		= None,
-	verbose				= False,
-	with_cuda			= False,
-	with_sycl			= False,
-	is_python_module	= True,
-	is_standalone		= False,
 	keep_intermediates	= False,
 )
 

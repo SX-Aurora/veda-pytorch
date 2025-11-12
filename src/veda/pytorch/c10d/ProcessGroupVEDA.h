@@ -237,7 +237,11 @@ public:
 	~ProcessGroupVEDA() override;
 
 	// Abort the MPI program, needs to be called when exception is detected
+#if TORCH_VERSION_ >= 20700
 	void abort() override;
+#else
+	void abort();
+#endif
 
 	const std::string getBackendName() const override {
 		return std::string(MPI_BACKEND_NAME);
