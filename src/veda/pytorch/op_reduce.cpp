@@ -77,11 +77,15 @@ static std::tuple<at::Tensor&, at::Tensor&> reduce_out_kernel(const at::Tensor& 
 template<VEDATensors_reduce_op OP>
 static std::tuple<at::Tensor&, at::Tensor&> reduce_out_impl(const at::Tensor& self, int64_t dim, bool keepdim, at::Tensor& values, at::Tensor& indicies) {
 	auto result = [&]() {
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
 		at::NoNamesGuard guard;
+#endif
     	return reduce_out_kernel<OP>(self, dim, keepdim, values, indicies);
 	}();
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
 	at::namedinference::propagate_names_for_reduction(values, self, dim, keepdim);
 	at::namedinference::propagate_names_for_reduction(indicies, self, dim, keepdim);
+#endif
 	return result;
 }
 

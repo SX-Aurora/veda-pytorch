@@ -91,16 +91,6 @@ static at::Tensor mean_dim_IntList(const at::Tensor& self, IntArrayRef dim, bool
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor mean_dim_DimnameList(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> dtype) {
-	return mean_dim_IntList(self, at::dimnames_to_positions(self, dim), keepdim, dtype);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor& mean_DimnameList_out(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype, at::Tensor& result) {
-	return mean_IntList_out(self, at::dimnames_to_positions(self, dim), keepdim, opt_dtype, result);
-}
-
-//------------------------------------------------------------------------------
 static at::Tensor mean(const at::Tensor& self, c10::optional<c10::ScalarType> dtype) {
 	return mean_dim_IntList(self, std::vector<int64_t>{}, false, dtype);
 }
@@ -126,32 +116,43 @@ static at::Tensor sum_dim_IntList(const at::Tensor& self, IntArrayRef dim, bool 
 }
 
 //------------------------------------------------------------------------------
-static at::Tensor sum_dim_DimnameList(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> dtype) {
-	return sum_dim_IntList(self, at::dimnames_to_positions(self, dim), keepdim, dtype);
-}
-
-//------------------------------------------------------------------------------
-static at::Tensor& sum_DimnameList_out(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype, at::Tensor& result) {
-	return sum_IntList_out(self, at::dimnames_to_positions(self, dim), keepdim, opt_dtype, result);
-}
-
-//------------------------------------------------------------------------------
 static at::Tensor sum(const at::Tensor& self, c10::optional<c10::ScalarType> dtype) {
 	return sum_dim_IntList(self, std::vector<int64_t>{}, false, dtype);
 }
 
 //------------------------------------------------------------------------------
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
+static at::Tensor mean_dim_DimnameList(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> dtype) {
+	return mean_dim_IntList(self, at::dimnames_to_positions(self, dim), keepdim, dtype);
+}
+
+static at::Tensor& mean_DimnameList_out(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype, at::Tensor& result) {
+	return mean_IntList_out(self, at::dimnames_to_positions(self, dim), keepdim, opt_dtype, result);
+}
+
+static at::Tensor sum_dim_DimnameList(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> dtype) {
+	return sum_dim_IntList(self, at::dimnames_to_positions(self, dim), keepdim, dtype);
+}
+
+static at::Tensor& sum_DimnameList_out(const at::Tensor& self, at::DimnameList dim, bool keepdim, c10::optional<at::ScalarType> opt_dtype, at::Tensor& result) {
+	return sum_IntList_out(self, at::dimnames_to_positions(self, dim), keepdim, opt_dtype, result);
+}
+#endif
+
+//------------------------------------------------------------------------------
 TORCH_LIBRARY_IMPL(aten, DEVICE_TYPE_, m) {
 	m.impl("mean",					TORCH_FN(mean));
 	m.impl("mean.dim",				TORCH_FN(mean_dim_IntList));
-	m.impl("mean.names_dim",		TORCH_FN(mean_dim_DimnameList));
 	m.impl("mean.out",				TORCH_FN(mean_IntList_out));
-	m.impl("mean.names_out",		TORCH_FN(mean_DimnameList_out));
 	m.impl("sum",					TORCH_FN(sum));
 	m.impl("sum.dim_IntList",		TORCH_FN(sum_dim_IntList));
-	m.impl("sum.dim_DimnameList",	TORCH_FN(sum_dim_DimnameList));
 	m.impl("sum.IntList_out",		TORCH_FN(sum_IntList_out));
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
+	m.impl("mean.names_dim",		TORCH_FN(mean_dim_DimnameList));
+	m.impl("mean.names_out",		TORCH_FN(mean_DimnameList_out));
+	m.impl("sum.dim_DimnameList",	TORCH_FN(sum_dim_DimnameList));
 	m.impl("sum.DimnameList_out",	TORCH_FN(sum_DimnameList_out));
+#endif
 }
 
 //------------------------------------------------------------------------------

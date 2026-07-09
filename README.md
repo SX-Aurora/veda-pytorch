@@ -14,6 +14,13 @@ into PyTorch.
 <table>
 <tr><th>Version</th><th>Comment</th></tr>
 
+<tr><td>v14.1.0</td><td>
+<ul>
+	<li>Added support to allocate float16 and bfloat16</li>
+	<li>Removed named tensor APIs for PyTorch >= 2.13.0 </li>
+</ul>
+</td></tr>
+
 <tr><td>v14.0.1</td><td>
 <ul>
 	<li>Increased c10d compatibility (tested on v2.5-2.9)</li>

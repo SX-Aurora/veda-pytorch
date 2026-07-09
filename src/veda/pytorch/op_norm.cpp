@@ -65,7 +65,9 @@ static at::TensorIterator make_reduction(const char* name, at::Tensor& result, c
 	auto mask = make_dim_mask(dim, ndim);
 	allocate_reduction_result(result, self, mask, keepdim, out_dtype);
 	auto viewed_result = review_reduce_result(result, ndim, mask, keepdim);
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
 	at::namedinference::propagate_names_for_reduction(result, self, dim, keepdim);
+#endif
 	if(self.scalar_type() == in_dtype) {
 		return at::TensorIterator::reduce_op(viewed_result, self);
 	}

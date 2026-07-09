@@ -141,16 +141,18 @@ bool isBool(const at::Tensor& self) {
 //------------------------------------------------------------------------------
 VEDATensors_dtype dtype(const at::Tensor& self) {
 	switch(self.scalar_type()) {
+		case c10::ScalarType::BFloat16:			return VEDA_TENSORS_DTYPE_BF16;
+		case c10::ScalarType::Bool:				return VEDA_TENSORS_DTYPE_S8;
 		case c10::ScalarType::Byte:				return VEDA_TENSORS_DTYPE_U8;
 		case c10::ScalarType::Char:				return VEDA_TENSORS_DTYPE_S8;
-		case c10::ScalarType::Short:			return VEDA_TENSORS_DTYPE_S16;
+		case c10::ScalarType::ComplexDouble:	return VEDA_TENSORS_DTYPE_F64_F64;
+		case c10::ScalarType::ComplexFloat:		return VEDA_TENSORS_DTYPE_F32_F32;
+		case c10::ScalarType::Double:			return VEDA_TENSORS_DTYPE_F64;
+		case c10::ScalarType::Half:				return VEDA_TENSORS_DTYPE_F16;
+		case c10::ScalarType::Float:			return VEDA_TENSORS_DTYPE_F32;
 		case c10::ScalarType::Int:				return VEDA_TENSORS_DTYPE_S32;
 		case c10::ScalarType::Long:				return VEDA_TENSORS_DTYPE_S64;
-		case c10::ScalarType::Float:			return VEDA_TENSORS_DTYPE_F32;
-		case c10::ScalarType::Double:			return VEDA_TENSORS_DTYPE_F64;
-		case c10::ScalarType::Bool:				return VEDA_TENSORS_DTYPE_S8;
-		case c10::ScalarType::ComplexFloat:		return VEDA_TENSORS_DTYPE_F32_F32;
-		case c10::ScalarType::ComplexDouble:	return VEDA_TENSORS_DTYPE_F64_F64;
+		case c10::ScalarType::Short:			return VEDA_TENSORS_DTYPE_S16;
 	}
 	
 	STHROW("Unknown PyTorch c10::ScalarType: " << self.scalar_type());
@@ -164,16 +166,18 @@ bool isBool(const c10::TensorImpl* self) {
 //------------------------------------------------------------------------------
 VEDATensors_dtype dtype(const c10::TensorImpl* self) {
 	if(self->dtype() == caffe2::TypeMeta::Make<bool>())					return VEDA_TENSORS_DTYPE_S8;
-	if(self->dtype() == caffe2::TypeMeta::Make<int8_t>())				return VEDA_TENSORS_DTYPE_S8;
+	if(self->dtype() == caffe2::TypeMeta::Make<c10::BFloat16>())		return VEDA_TENSORS_DTYPE_BF16;
+	if(self->dtype() == caffe2::TypeMeta::Make<c10::Half>())			return VEDA_TENSORS_DTYPE_F16;
+	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<double>>())	return VEDA_TENSORS_DTYPE_F64_F64;
+	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<float>>())	return VEDA_TENSORS_DTYPE_F32_F32;
+	if(self->dtype() == caffe2::TypeMeta::Make<double>())				return VEDA_TENSORS_DTYPE_F64;
+	if(self->dtype() == caffe2::TypeMeta::Make<float>())				return VEDA_TENSORS_DTYPE_F32;
 	if(self->dtype() == caffe2::TypeMeta::Make<int16_t>())				return VEDA_TENSORS_DTYPE_S16;
 	if(self->dtype() == caffe2::TypeMeta::Make<int32_t>())				return VEDA_TENSORS_DTYPE_S32;
 	if(self->dtype() == caffe2::TypeMeta::Make<int64_t>())				return VEDA_TENSORS_DTYPE_S64;
-	if(self->dtype() == caffe2::TypeMeta::Make<uint8_t>())				return VEDA_TENSORS_DTYPE_U8;
+	if(self->dtype() == caffe2::TypeMeta::Make<int8_t>())				return VEDA_TENSORS_DTYPE_S8;
 	if(self->dtype() == caffe2::TypeMeta::Make<uint16_t>())				return VEDA_TENSORS_DTYPE_U16;
-	if(self->dtype() == caffe2::TypeMeta::Make<float>())				return VEDA_TENSORS_DTYPE_F32;
-	if(self->dtype() == caffe2::TypeMeta::Make<double>())				return VEDA_TENSORS_DTYPE_F64;
-	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<float>>())	return VEDA_TENSORS_DTYPE_F32_F32;
-	if(self->dtype() == caffe2::TypeMeta::Make<c10::complex<double>>())	return VEDA_TENSORS_DTYPE_F64_F64;
+	if(self->dtype() == caffe2::TypeMeta::Make<uint8_t>())				return VEDA_TENSORS_DTYPE_U8;
 	
 	STHROW("Unknown PyTorch caffee2::TypeMeta: " << self->dtype());
 }

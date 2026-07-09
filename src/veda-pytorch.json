@@ -26,7 +26,7 @@
 	"requires-dist": [
 		"veda (>= 2.3.0, < 3)",
 		"tungl (>= 0.1.5, < 1)",
-		"veda-tensors (>= 0.1.9, < 2)",
+		"veda-tensors (>= 0.1.10, < 2)",
 		"torch",
 		"ninja",
 		"packaging"

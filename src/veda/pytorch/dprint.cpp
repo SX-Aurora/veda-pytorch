@@ -38,16 +38,18 @@ void dprint__(std::ostringstream& ss, const std::optional<at::Tensor>& tensor) {
 void dprint__(std::ostringstream& ss, const at::Tensor& tensor) {
 	ss << "Tensor[dtype=";
 	switch(tensor.scalar_type()) {
+		case c10::ScalarType::BFloat16:			ss << "BF16";		break;
+		case c10::ScalarType::Bool:				ss << "S8";			break;
 		case c10::ScalarType::Byte:				ss << "U8";			break;
 		case c10::ScalarType::Char:				ss << "S8";			break;
-		case c10::ScalarType::Short:			ss << "S16";		break;
+		case c10::ScalarType::ComplexDouble:	ss << "F64_F64";	break;
+		case c10::ScalarType::ComplexFloat:		ss << "F32_F32";	break;
+		case c10::ScalarType::Double:			ss << "F64";		break;
+		case c10::ScalarType::Float:			ss << "F32";		break;
+		case c10::ScalarType::Half:				ss << "F16";		break;
 		case c10::ScalarType::Int:				ss << "S32";		break;
 		case c10::ScalarType::Long:				ss << "S64";		break;
-		case c10::ScalarType::Float:			ss << "F32";		break;
-		case c10::ScalarType::Double:			ss << "F64";		break;
-		case c10::ScalarType::Bool:				ss << "S8";			break;
-		case c10::ScalarType::ComplexFloat:		ss << "F32_F32";	break;
-		case c10::ScalarType::ComplexDouble:	ss << "F64_F64";	break;
+		case c10::ScalarType::Short:			ss << "S16";		break;
 	}
 	ss << ", shape=";
 	dprint_lst(ss, tensor.sizes());

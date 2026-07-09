@@ -102,7 +102,9 @@ template<typename Vec>
 static at::Tensor alias_with_sizes_and_strides(const at::Tensor& self, const Vec& sizes, const Vec& strides) {
 	at::Tensor self_ = at::detail::make_tensor<at::TensorImpl>(c10::TensorImpl::VIEW, at::Storage(self.storage()), self.key_set(), self.dtype());
 	setStrided(self_, sizes, strides, self.storage_offset());
+#if TORCH_VERSION_MAJOR == 2 && TORCH_VERSION_MINOR < 13
 	at::namedinference::propagate_names(self_, self);
+#endif
 	return self_;
 }
 
